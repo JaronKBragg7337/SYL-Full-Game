@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-03 — Codex — Mobile layout cleanup + analog horizontal fix
+
+**State:** working locally; deploy after commit.
+
+**Shipped:** fixed the remaining horizontal control reversal by restoring
+player right-vector math to match the actual camera right vector. Mobile CSS now
+keeps HUD/toasts/help/panels from overlapping: help hidden on small screens,
+toasts below HUD, map wraps to phone width, ship builder scrolls inside its
+panel, and touch controls hide while panels are open. Ship throttle buttons only
+appear while piloting.
+
+**Verified:** pending final checks in this session; expected `npm test`,
+`node --check`, phone-width Browser screenshots, live deploy smoke.
+
+**Next up:** Jaron should retest on phone: analog right/left, B ship builder,
+M map, and normal walking/looting near the base.
+
+**Gotchas:** Browser viewport does not emulate touch APIs here, so touch-root
+visibility was validated by source/CSS plus phone-width layout screenshots; real
+phone remains the final feel check.
+
+---
+
 ## 2026-07-03 — Codex — Fix controls, structure collision, and nearby salvage
 
 **State:** working. Gameplay repo and live site are both updated.

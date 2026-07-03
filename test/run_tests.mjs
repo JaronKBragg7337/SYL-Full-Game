@@ -133,11 +133,12 @@ console.log('\n== 3. Controls and local playability ==');
   player.yaw = 0; player.pitch = 0;
   const up = upAt(earth, player.worldPos);
   const frame = player.localFrame(up);
-  const expectedRight = up.clone().cross(frame.fwd).normalize();
-  check('A/D right vector matches camera frame', frame.right.dot(expectedRight) > 0.999);
   const camPos = new THREE.Vector3(), camQuat = new THREE.Quaternion();
   player.cameraPose(camPos, camQuat);
   const cameraForward = new THREE.Vector3(0, 0, -1).applyQuaternion(camQuat).normalize();
+  const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camQuat).normalize();
+  check('A/D right vector matches camera right', frame.right.dot(cameraRight) > 0.999,
+    `dot=${frame.right.dot(cameraRight).toFixed(3)}`);
   check('first-person camera looks where W moves', cameraForward.dot(frame.fwd) > 0.999,
     `dot=${cameraForward.dot(frame.fwd).toFixed(3)}`);
 }

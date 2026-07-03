@@ -1,5 +1,16 @@
 # CHANGELOG.md
 
+## 0.2.3 — 2026-07-03 — Mobile layout and analog-stick fix (Builder: Codex)
+- Fixed the remaining reversed horizontal movement by aligning A/D movement
+  with the actual first-person camera right vector; the test now checks camera
+  right directly.
+- Improved mobile layout: HUD is smaller, help is hidden by default on narrow
+  screens/touch, toasts sit below the HUD, map tables wrap to phone width, and
+  dense ship-builder tables scroll within the panel.
+- Touch controls now hide while panels are open and ship throttle/brake/gear
+  buttons only appear while piloting, preventing the overlays shown in Jaron's
+  phone screenshots.
+
 ## 0.2.2 — 2026-07-03 — Controls, collision, and testable salvage (Builder: Codex)
 - Fixed backwards-feeling controls: first-person camera now looks along the
   same vector W moves, A/D use the correct right vector, mouse-up looks up, and
