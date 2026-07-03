@@ -47,4 +47,21 @@ pieces, so an Unreal agent can port system by system:
 |---|---|
 | engine.js floating origin | `AFloatingOriginManager` (proven, 2c) |
 | f64 world positions | UE Large World Coordinates (64-bit, confirmed to 88M km) |
-| planet.js analytic terrain | `SurfaceTileManager`/`ProcTerrainTile` sampling ONE height fn; giant mesh = visual only, NoCollision (proven, 2d/2
+| planet.js analytic terrain | `SurfaceTileManager`/`ProcTerrainTile` sampling ONE height fn; giant mesh = visual only, NoCollision (proven, 2d/2e) |
+| player.js radial movement | `ARadialGravityPawn` custom movement (proven, 2f) |
+| ship.js swept integrator | `ASweptGravityBody` pattern: integrate + swept move, no Chaos forces (proven, 2e) |
+| bodies.js registry | `BP_SYL_CelestialBody` data-driven fields (exists) |
+| traversal.js derived phases | same derivation from altitude/velocity/dominant body |
+| shipParts/shipBuilder | modular gunship + per-module components (gunship exists; slots to build) |
+| save.js payload | SaveGame object with identical shape |
+
+The official serious game path is Unreal/Unity. Unreal is the better-documented
+lane today because SpaceYouLand/Kurearthis already contain proofs there; Unity
+work should preserve the same boundaries: floating origin, one terrain-height
+source, custom high-precision movement, data registries, modular ships, and
+versioned persistence.
+
+Kurearthis's hard-won gotchas that MUST carry over: never let a true-scale mesh
+provide physics contacts (even query-only blocks sweeps kilometers early);
+Chaos `AddForce` integrates 10–100× wrong — drive motion kinematically;
+walkable-ship collision law: only hull + landing pads join the rigid body.

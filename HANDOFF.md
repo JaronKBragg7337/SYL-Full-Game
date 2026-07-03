@@ -16,6 +16,39 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-03 — Codex — Repair sync-truncated documentation tails
+
+**State:** working. Documentation set is complete again; no gameplay changes.
+
+**Shipped:** restored cut-off endings in README.md, AGENTS.md, HANDOFF.md,
+CHANGELOG.md, ROADMAP.md, PORTABILITY.md, and VISION.md after the v0.2.0
+sync/write race. Confirmed CLAUDE.md, ARCHITECTURE.md, and DECISIONS.md were
+already complete. Preserved the canon that the browser build is the live
+blueprint/public playtest at heartbeatobservatory.com/games/syl, the official
+serious game path is Unreal/Unity, mobile must remain playable, and planetary
+traversal/modular ships/factions/persistence/no fake teleport traversal are
+non-negotiable.
+
+**Verified:** `npm test` = 32/32 passed. Documentation metadata check confirmed
+all ten inspected docs end with newlines and have headings. Local server at
+http://localhost:8377 returned HTTP 200; Browser smoke rendered canvas + HUD and
+`H` help toggle worked. Mobile-size Browser smoke (390×844) rendered canvas +
+HUD + touch control surfaces. Live URL
+https://heartbeatobservatory.com/games/syl/ returned HTTP 200 and Browser smoke
+rendered canvas + HUD with no live-site app warnings/errors. One localhost
+pointer-lock click produced Chromium's own `UnknownError` message; boot logs were
+clean before interaction and no heartbeatobservatory.com logs were present.
+
+**Next up:** Jaron's desktop flight + phone touch feel tests, then ROADMAP M1
+flight-feel tuning. Do not start new gameplay until this docs repair commit is
+pushed.
+
+**Gotchas:** prior sync race truncated markdown mid-line while leaving the repo
+otherwise runnable. When a doc ends mid-word or lacks its expected final
+sections, compare against earlier commits before treating it as intentional.
+
+---
+
 ## 2026-07-03 (later) — Claude (Fable 5, Cowork) — Live at heartbeatobservatory.com/games/syl + mobile + official-game vision
 
 **State:** working. Live URL serving the game; `npm test` 32/32; touch controls in.
@@ -76,4 +109,23 @@ readShipControls in main.js).
 
 **Gotchas:**
 - The three.js import works via import map in the browser and via a
-  node_modules/three shim (auto-written by `npm test`) in Node. Don't npm-in
+  node_modules/three shim (auto-written by `npm test`) in Node. Don't npm-install
+  three; the vendored lib/three.module.js is the single copy.
+- F5/F9 are save/load and preventDefault'ed — don't rebind browser-critical keys
+  without doing the same (engine.js Input).
+- Boarding the ship at the home pad fires the home-zone discovery (harmless
+  flavor + a checkpoint save). If a player has an old save and plays fresh
+  without F9 first, that checkpoint overwrites it — acceptable now, fix with a
+  save-slot UI later (ROADMAP M1/M6).
+- Windows/Cowork file-sync note: one Write raced and truncated
+  test/run_tests.mjs mid-session (fixed by appending). If a file looks cut off,
+  check line count and recent history before assuming the last agent wrote
+  broken content.
+- Ship exit places you 5 m to the ship's +X side — if you ever add wide
+  modules there, revisit exitShip in traversal.js.
+- Background browser tabs throttle requestAnimationFrame: if you inspect the
+  game via remote tools while the tab is unfocused, the camera lerp/physics
+  may look frozen or lagged. It is not a bug; focus the tab.
+- The starter ship deliberately CANNOT fly until repaired (engine at 20% is
+  below the 40% degraded threshold). If "nothing happens on W," that's the
+  design, not a bug — the HUD says NOT READY and the toast points to B.

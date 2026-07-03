@@ -80,4 +80,39 @@ de-risk the official build.
 - [ ] Cloud saves: transport beside localStorage PUTting the same payload
       (fable-survival api/save.js + Supabase is the working reference; the
       heartbeat-observatory site already runs Supabase — consider sharing it)
-- [ ] Account linking (player-code patter
+- [ ] Account linking (player-code pattern from fable-survival)
+- [ ] Multiplayer research spike: authoritative server for f64 world state,
+      client prediction for integrators — WRITE FINDINGS BEFORE CODE
+- [ ] Server-authoritative world sim prototype (the persistent-galaxy seed)
+- [ ] PVP foundation: damage ownership, player identity, friendly/hostile
+      faction rules, death/respawn cost, and persistence-safe combat logs
+- [ ] Survival pressure: inventory loss rules, stranded recovery, extraction/
+      recovery loops that match the DayZ/ARC Raiders/Battlefield tone target
+
+## Milestone 6 — Hardening & deployment
+- [ ] Automate live-site sync to heartbeatobservatory.com/games/syl (copy
+      index.html/lib/src only, preserve site saves; see PORTABILITY.md)
+- [ ] Expand test suite: traversal phase transitions, crash damage, zone
+      discovery, save migration fixtures, mobile input smoke
+- [ ] Performance budget + CI check (fable-survival's bundle-size discipline);
+      mobile frame rate is the budget
+- [ ] Codex/Claude handoff protocol drill: one full session by another model
+      following AGENTS.md, then fix whatever confused it
+
+## Milestone 7 — Official Unreal/Unity lane [UNREAL-PREP]
+- [ ] Produce a port packet: system-by-system acceptance tests, data schemas,
+      and save payload examples for Unreal/Unity agents
+- [ ] Unreal prototype: import bodies registry + analytic terrain sampling into
+      the Kurearthis/SpaceYouLand lane; verify floating-origin behavior at scale
+- [ ] Ship builder prototype in engine: modular slots/attachment nodes, damage,
+      repair, fuel/power budgets, and persistence matching this repo's payload
+- [ ] Planet-to-space traversal prototype in engine with no loading screen or
+      fake teleport; phase labels remain derived from physical state
+- [ ] Visual identity target pass: serious Fortis materials, lighting, grounded
+      weapon/gear texture direction, and faction architecture kit
+
+## Standing rules for every item
+No flat-world hacks. No loading screens. No teleport pretending to be travel.
+No second height source. No physics library without a measured case. Ship stays
+modular. Planetary traversal, factions, persistence, and mobile playability stay
+intact. Old saves keep loading. Update HANDOFF.md + CHANGELOG.md before stopping.

@@ -68,4 +68,13 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Faction registry + standings | `src/factions/factions.js` |
 | Items / inventory | `src/items/items.js`, `src/inventory/inventory.js` |
 | Save/load (localStorage, backend-ready) | `src/save/save.js` |
-| HUD/pa
+| HUD/panels | `src/ui/ui.js` |
+| Touch controls | `src/ui/touch.js` |
+| Headless tests | `test/run_tests.mjs` |
+
+## Docs
+
+`VISION.md` (what SYL is) · `ARCHITECTURE.md` (why it's built this way) ·
+`AGENTS.md` + `CLAUDE.md` (how agents work here) · `HANDOFF.md` (session log) ·
+`ROADMAP.md` (what's next) · `DECISIONS.md` (real vs approximated — read this) ·
+`PORTABILITY.md` (moving/deploying/live-site sync) · `CHANGELOG.md`.

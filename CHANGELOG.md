@@ -1,5 +1,16 @@
 # CHANGELOG.md
 
+## 0.2.1 — 2026-07-03 — Documentation truncation repair (Builder: Codex)
+- Repaired sync-truncated tails in README.md, AGENTS.md, HANDOFF.md,
+  CHANGELOG.md, ROADMAP.md, PORTABILITY.md, and VISION.md.
+- Preserved the v0.2.0 canon: browser build is the live blueprint/public
+  playtest at heartbeatobservatory.com/games/syl; official serious game path
+  is Unreal/Unity; mobile remains required; planetary traversal, modular
+  ships, factions, persistence, and no fake teleport/loading-screen traversal
+  remain non-negotiable.
+- Inspected CLAUDE.md, ARCHITECTURE.md, and DECISIONS.md; their tails were
+  already complete.
+
 ## 0.2.0 — 2026-07-03 — Live hosting + mobile + official-game vision (Builder: Claude, Fable 5)
 - Deployed the game to heartbeatobservatory.com/games/syl (copy in the
   heartbeat-observatory repo, Vercel auto-deploy) with a card on the games hub.
@@ -30,4 +41,20 @@
   stats, per-module HP with degradation, readiness rules, piece-by-piece visual
   rebuild; builder actions install/remove/repair/refuel; starter ship spawns
   damaged (engine dead, power cell + gear missing, tanks empty).
-- Ship f
+- Ship flight: 6-DOF custom integrator, N-body inverse-square gravity, throttle
+  + vertical thrust + brake + roll, atmospheric drag, soft-landing vs
+  crash-damage ground contact, landing-gear state.
+- Traversal state machine: ON_FOOT ⇄ PILOTING; LANDED/TAKEOFF/ATMOSPHERE/
+  SPACE/APPROACH/DESCENT derived from physical state; continuous atmosphere→
+  starfield fade; enter/exit ship rules.
+- Factions: Fortis (canon) + 6 marked placeholders; standings, meet events,
+  economy/governance hook fields. Items/inventory; pickup crates around zones.
+- Save/load v1 (localStorage): player, ship+modules, inventory, world
+  discovery/flags, faction standings, mode; F5/F9 + autosave + discovery
+  checkpoint saves.
+- UI: HUD, prompts, toasts, center messages, inventory/ship-builder/body-map
+  panels, help overlay.
+- Tests: `npm test` — 32 headless checks including a full simulated
+  Earth-pad → space → Moon-landing run using the real integrator.
+- Docs: README, VISION, ARCHITECTURE, AGENTS, CLAUDE, HANDOFF, ROADMAP,
+  PORTABILITY, DECISIONS, CHANGELOG.
