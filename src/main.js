@@ -60,6 +60,10 @@ const homeBody = getBody('earth');
 const spawnZone = homeBody.landingZones.find((z) => z.id === homeBody.spawn.zoneId);
 const player = new Player(engine, input, BODIES);
 player.placeAt(zoneWorldPos(homeBody, spawnZone, 0.2));
+// Face the parked ship (local east — see ship placement below) and tilt the
+// view slightly down so the pad/horizon reads immediately on a small planet.
+player.yaw = Math.PI / 2;
+player.pitch = -0.12;
 
 const ship = new Ship(engine, BODIES);
 {
@@ -160,6 +164,10 @@ const game = {
 
 spawnPickups(game.pickupsCollected);
 const ui = new UI(document.getElementById('ui-root'), game);
+
+// Debug handle for agents/console: inspect any system live (window.game.ship
+// etc.). Read-only by convention — mutate through system APIs only.
+window.game = game;
 
 // ---------------------------------------------------------------------------
 // World events → player-facing feedback + faction hooks.
@@ -389,12 +397,4 @@ engine.addUpdater((dt) => {
 // ---------------------------------------------------------------------------
 // Start.
 // ---------------------------------------------------------------------------
-document.getElementById('boot-msg')?.remove();
-if (SaveSystem.hasSave()) {
-  ui.showToast('Save found — press F9 to continue, or play fresh.', 6000);
-}
-ui.showCenter(
-  'SYL — FOUNDATION BUILD<br>' +
-  '<span class="dim">Your ship is damaged. Gather crates (F), repair and fuel it (B), then fly to another world.<br>' +
-  'Click to take mouse control. H toggles help.</span>', 9000);
-engine.start();
+document.getElementById('boot

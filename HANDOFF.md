@@ -65,6 +65,7 @@ readShipControls in main.js).
   check `wc -l` before assuming the last agent wrote broken code.
 - Ship exit places you 5 m to the ship's +X side — if you ever add wide
   modules there, revisit exitShip in traversal.js.
-- The starter ship deliberately CANNOT fly until repaired (engine at 20% is
-  below the 40% degraded threshold). If "nothing happens on W," that's the
-  design, not a bug — the HUD says NOT READY and the toast points to B.
+- Background browser tabs throttle requestAnimationFrame: if you inspect the
+  game via remote tools while the tab is unfocused, the camera lerp/physics
+  may look frozen or lagged. It is not a bug; focus the tab.
+- The start

@@ -55,11 +55,15 @@ export class Player {
     );
     visor.position.set(0, 1.45, 0.28);
     this.bodyMesh.add(suit, visor);
+    // First-person build: the LOCAL player's body is never rendered (it would
+    // float in front of the camera). The mesh exists for third-person view and
+    // multiplayer (ROADMAP M1/M5) — flip this then via setVisible.
+    this.bodyMesh.visible = false;
     engine.scene.add(this.bodyMesh);
     this._trackEntry = engine.trackWorldObject({ worldPos: this.worldPos, object3d: this.bodyMesh });
   }
 
-  setVisible(v) { this.bodyMesh.visible = v; }
+  setVisible(_v) { this.bodyMesh.visible = false; /* first-person: see ctor note */ }
 
   placeAt(worldPos) {
     this.worldPos.copy(worldPos);
@@ -182,8 +186,4 @@ export class Player {
 // Module-scope temps.
 const _up = new THREE.Vector3(), _up2 = new THREE.Vector3(), _g = new THREE.Vector3();
 const _move = new THREE.Vector3(), _rel = new THREE.Vector3();
-const _east = new THREE.Vector3(), _north = new THREE.Vector3();
-const _fwd = new THREE.Vector3(), _right = new THREE.Vector3();
-const _refY = new THREE.Vector3(0, 1, 0), _refX = new THREE.Vector3(1, 0, 0);
-const _m = new THREE.Matrix4(), _tmpV = new THREE.Vector3(), _tmpV2 = new THREE.Vector3();
-const _zero = new THREE.Vector3();
+const _east = new THREE.Vector

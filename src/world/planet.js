@@ -200,10 +200,10 @@ function buildZoneStructures(body, zone, factionById) {
   g.add(pad);
 
   const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(24, 0.7, 8, 32),
+    new THREE.TorusGeometry(24, 0.3, 8, 48),
     new THREE.MeshBasicMaterial({ color: fColor })
   );
-  placeOnSurface(body, zone._dirV, ring, 0.9);
+  placeOnSurface(body, zone._dirV, ring, 0.35);
   ring.rotateX(Math.PI / 2);
   g.add(ring);
 
