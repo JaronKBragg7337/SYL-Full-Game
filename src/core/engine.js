@@ -108,6 +108,8 @@ export class Engine {
 export class Input {
   constructor(canvas) {
     this.keys = new Set();
+    this.virtualKeys = new Set(); // touch-driven "keys" (src/ui/touch.js)
+    this.touchMode = false;       // true once touch controls are active
     this.mouseDX = 0; this.mouseDY = 0;
     this.pointerLocked = false;
     this._pressListeners = new Map(); // code -> [fns] fired once on keydown
@@ -133,7 +135,25 @@ export class Input {
       if (this.pointerLocked) { this.mouseDX += e.movementX; this.mouseDY += e.movementY; }
     });
   }
-  down(code) { return this.keys.has(code); }
+  down(code) { return this.keys.has(code) || this.virtualKeys.has(code); }
+
+  // Touch layer: press/release a virtual key. Press fires onPress listeners
+  // exactly like a physical keydown, so all bindings work untouched.
+  setVirtual(code, on) {
+    if (on) {
+      if (!this.virtualKeys.has(code)) {
+        this.virtualKeys.add(code);
+        const fns = this._pressListeners.get(code);
+        if (fns) for (const f of fns) f({ code, virtual: true });
+      }
+    } else {
+      this.virtualKeys.delete(code);
+    }
+  }
+
+  // Whether look/movement input should be honored (mouse capture or touch).
+  get lookActive() { return this.pointerLocked || this.touchMode; }
+
   onPress(code, fn) {
     if (!this._pressListeners.has(code)) this._pressListeners.set(code, []);
     this._pressListeners.get(code).push(fn);

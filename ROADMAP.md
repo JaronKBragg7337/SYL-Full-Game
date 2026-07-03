@@ -2,7 +2,17 @@
 
 Work top-down within the current milestone. One item = one session chunk:
 implement → `npm test` green (add tests) → browser-verify → HANDOFF + CHANGELOG
-→ commit. Do not start several items at once.
+→ commit → **deploy to the live site** (PORTABILITY.md). Do not start several
+items at once.
+
+## ⭐ NORTH STAR (Jaron, 2026-07-03)
+The destination is an **official Unreal/Unity game**: EVE's planet-to-planet
+persistent open world + KSP's piece-by-piece building + DayZ/ARC Raiders/
+Battlefield PVP (VISION.md). This repo is the live blueprint + public playtest
+at **heartbeatobservatory.com/games/syl** — every merged change must reach that
+URL. No local-only work. Mobile must keep working (Jaron tests on his phone).
+When sessions have spare capacity, prefer items tagged [UNREAL-PREP]: they
+de-risk the official build.
 
 ## Milestone 0 — Foundation (THIS BUILD — done 2026-07-03)
 - [x] Floating-origin engine, f64 world coordinates
@@ -25,8 +35,12 @@ implement → `npm test` green (add tests) → browser-verify → HANDOFF + CHAN
 - [ ] Crash/repair loop polish: gear-only soft landings, per-module damage
       readout toast, stranded-recovery mechanic (emergency beacon → Fortis tow
       at standing cost — first faction-relationship USE)
-- [ ] Browser perf pass: body mesh LOD by distance, HUD refresh throttling
-- [ ] Mobile/gamepad input layer (fable-survival showed mobile is a reach lever)
+- [ ] Browser perf pass: body mesh LOD by distance, HUD refresh throttling —
+      MOBILE FRAME RATE IS THE BUDGET (Jaron tests on phone)
+- [x] Mobile touch input layer (joystick + look + buttons, 2026-07-03) —
+      follow-up: tune sizes/sensitivity from Jaron's phone feel test; gamepad
+- [ ] Mobile polish: HUD scaling on small screens, orientation hint,
+      fullscreen button, iOS Safari audit
 
 ## Milestone 2 — World depth
 - [ ] Terrain LOD: quadtree patches near the camera sampling `terrainRadiusAt()`
@@ -62,23 +76,8 @@ implement → `npm test` green (add tests) → browser-verify → HANDOFF + CHAN
 - [ ] Visual identity pass: procedural textures, better lighting, per-faction
       architecture kits (still no premade asset packs)
 
-## Milestone 5 — Persistence & multiplayer research
+## Milestone 5 — Persistence, multiplayer & PVP foundation
 - [ ] Cloud saves: transport beside localStorage PUTting the same payload
-      (fable-survival api/save.js + Supabase is the working reference)
-- [ ] Account linking (player-code pattern from fable-survival)
-- [ ] Multiplayer research spike: authoritative server for f64 world state,
-      client prediction for integrators — WRITE FINDINGS BEFORE CODE
-- [ ] Server-authoritative world sim prototype (the persistent-galaxy seed)
-
-## Milestone 6 — Hardening
-- [ ] Deploy to Vercel/Pages (static; PORTABILITY.md) + playtest link for Jaron
-- [ ] Expand test suite: traversal phase transitions, crash damage, zone
-      discovery, save migration fixtures
-- [ ] Performance budget + CI check (fable-survival's bundle-size discipline)
-- [ ] Codex/Claude handoff protocol drill: one full session by another model
-      following AGENTS.md, then fix whatever confused it
-
-## Standing rules for every item
-No flat-world hacks. No loading screens. No second height source. No physics
-library without a measured case. Ship stays modular. Old saves keep loading.
-Update HANDOFF.md + CHANGELOG.md before stopping.
+      (fable-survival api/save.js + Supabase is the working reference; the
+      heartbeat-observatory site already runs Supabase — consider sharing it)
+- [ ] Account linking (player-code patter

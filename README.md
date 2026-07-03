@@ -7,14 +7,18 @@ teleports), a modular piece-by-piece ship, factions, and persistence.
 Built by Claude (Fable 5) for Jaron, 2026-07-03, as the bridge foundation other
 agents (Claude, Codex, Opus) continue. **Read AGENTS.md before touching anything.**
 
-## Play it (Windows, zero installs beyond Node)
+## Play it
 
-1. Double-click **`START_GAME.cmd`** (starts a local server, opens the browser), or run:
-   ```
-   node server.js
-   ```
-   then open http://localhost:8377
-2. Click the game to take mouse control.
+**Live (anyone, any device incl. phones):** https://heartbeatobservatory.com/games/syl/
+
+Local dev (Windows, zero installs beyond Node): double-click **`START_GAME.cmd`**,
+or `node server.js` → http://localhost:8377. Click the game for mouse control;
+on touch devices the joystick/buttons appear automatically.
+
+**The bigger picture:** this repo is the living blueprint and public playtest
+for the official SYL game (Unreal/Unity — see VISION.md "The official game"
+and ROADMAP Milestone 7). Target: EVE-style planet-to-planet open world,
+KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
 
 ## The loop that exists right now
 
@@ -64,12 +68,4 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Faction registry + standings | `src/factions/factions.js` |
 | Items / inventory | `src/items/items.js`, `src/inventory/inventory.js` |
 | Save/load (localStorage, backend-ready) | `src/save/save.js` |
-| HUD/panels | `src/ui/ui.js` |
-| Headless tests | `test/run_tests.mjs` |
-
-## Docs
-
-`VISION.md` (what SYL is) · `ARCHITECTURE.md` (why it's built this way) ·
-`AGENTS.md` + `CLAUDE.md` (how agents work here) · `HANDOFF.md` (session log) ·
-`ROADMAP.md` (what's next) · `DECISIONS.md` (real vs approximated — read this) ·
-`PORTABILITY.md` (moving/deploying) · `CHANGELOG.md`.
+| HUD/pa

@@ -11,10 +11,27 @@ No npm install. Three.js is vendored at `lib/three.module.js` (r160).
 Any static file server works (`python -m http.server`, VS Code Live Server…);
 ES modules just need http://, not file://.
 
-## Deploy (static host — the fable-survival pattern)
-The game is 100% static files. Vercel: import repo, no build command, output
-dir = root. GitHub Pages / itch.io (zip upload) also work as-is. localStorage
-saves are per-origin: players keep progress per deployment URL.
+## Deploy — LIVE at heartbeatobservatory.com/games/syl (required step)
+
+The public build lives inside Jaron's website repo
+**github.com/JaronKBragg7337/heartbeat-observatory** (Vercel auto-deploys its
+`main` branch to heartbeatobservatory.com). The game is a static copy at
+`games/syl/` there, plus a card on `games/index.html`.
+
+To ship a new build (after `npm test` is green and you've committed here):
+```
+git clone https://github.com/JaronKBragg7337/heartbeat-observatory /tmp/hb
+rm -rf /tmp/hb/games/syl && mkdir -p /tmp/hb/games/syl
+cp -r index.html lib src /tmp/hb/games/syl/
+cd /tmp/hb && git add -A && git commit -m "SYL: sync build <version/commit>" && git push
+```
+Vercel deploys automatically (~1 min). Verify at
+https://heartbeatobservatory.com/games/syl/ — boot + one interaction + no
+console errors. Only `index.html`, `lib/`, `src/` ship; docs/tests/server stay
+in this repo. Note: localStorage saves are per-origin — players on the site
+keep separate progress from localhost. ROADMAP M6 has the automation task.
+
+Other static hosts (GitHub Pages, itch.io) also work if ever needed.
 
 ## Disaster recovery
 Everything lives in git. Rebuilding a machine = clone + Node. The only
@@ -30,15 +47,4 @@ pieces, so an Unreal agent can port system by system:
 |---|---|
 | engine.js floating origin | `AFloatingOriginManager` (proven, 2c) |
 | f64 world positions | UE Large World Coordinates (64-bit, confirmed to 88M km) |
-| planet.js analytic terrain | `SurfaceTileManager`/`ProcTerrainTile` sampling ONE height fn; giant mesh = visual only, NoCollision (proven, 2d/2e) |
-| player.js radial movement | `ARadialGravityPawn` custom movement (proven, 2f) |
-| ship.js swept integrator | `ASweptGravityBody` pattern: integrate + swept move, no Chaos forces (proven, 2e) |
-| bodies.js registry | `BP_SYL_CelestialBody` data-driven fields (exists) |
-| traversal.js derived phases | same derivation from altitude/velocity/dominant body |
-| shipParts/shipBuilder | modular gunship + per-module components (gunship exists; slots to build) |
-| save.js payload | SaveGame object with identical shape |
-
-Kurearthis's hard-won gotchas that MUST carry over: never let a true-scale mesh
-provide physics contacts (even query-only blocks sweeps kilometers early);
-Chaos `AddForce` integrates 10–100× wrong — drive motion kinematically;
-walkable-ship collision law: only hull + landing pads join the rigid body.
+| planet.js analytic terrain | `SurfaceTileManager`/`ProcTerrainTile` sampling ONE height fn; giant mesh = visual only, NoCollision (proven, 2d/2

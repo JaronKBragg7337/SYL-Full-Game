@@ -26,6 +26,7 @@ import { FactionState } from './factions/factions.js';
 import { Inventory } from './inventory/inventory.js';
 import { getItem } from './items/items.js';
 import { UI } from './ui/ui.js';
+import { initTouch } from './ui/touch.js';
 import * as SaveSystem from './save/save.js';
 
 // ---------------------------------------------------------------------------
@@ -168,6 +169,10 @@ const ui = new UI(document.getElementById('ui-root'), game);
 // Debug handle for agents/console: inspect any system live (window.game.ship
 // etc.). Read-only by convention — mutate through system APIs only.
 window.game = game;
+
+// Touch controls (phones/tablets): activates only on touch devices and routes
+// through the same Input as the keyboard. See src/ui/touch.js.
+const touchActive = initTouch(input, document.getElementById('ui-root'));
 
 // ---------------------------------------------------------------------------
 // World events → player-facing feedback + faction hooks.
@@ -377,7 +382,7 @@ engine.addUpdater((dt) => {
     player.worldPos.copy(ship.worldPos); // pilot rides inside
     player.tickPassive?.();
   } else {
-    player.tick(dt, !panelsOpen && input.pointerLocked);
+    player.tick(dt, !panelsOpen && input.lookActive);
     ship.tick(dt, false, null);
   }
 
@@ -404,5 +409,7 @@ if (SaveSystem.hasSave()) {
 ui.showCenter(
   'SYL — FOUNDATION BUILD<br>' +
   '<span class="dim">Your ship is damaged. Gather crates (F), repair and fuel it (B), then fly to another world.<br>' +
-  'Click to take mouse control. H toggles help.</span>', 9000);
+  (touchActive
+    ? 'Left stick moves · drag to look · buttons on the right.</span>'
+    : 'Click to take mouse control. H toggles help.</span>'), 9000);
 engine.start();

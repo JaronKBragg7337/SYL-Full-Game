@@ -19,6 +19,14 @@ Read in this order before doing anything:
 
 - The game must run at all times. `node server.js` + browser, and `npm test`
   green, before AND after your session.
+- **The game is live at heartbeatobservatory.com/games/syl — keep it live.**
+  Every finished chunk deploys there (PORTABILITY.md § Deploy). Jaron does not
+  want local-only builds: other people play this, and he tests on his phone.
+- **Mobile stays playable.** Touch controls (src/ui/touch.js) must keep
+  working; check them when you change input or UI.
+- **The destination is the official Unreal/Unity game** (VISION.md § The
+  official game). This repo is the blueprint/playtest, not the endgame —
+  prefer choices that transfer to Unreal.
 - **Never** introduce a flat-world assumption, a loading screen, a teleport
   masquerading as travel, or a second terrain-height source.
 - **Never** store gameplay positions in mesh positions (floating-origin rule).
@@ -40,14 +48,4 @@ Read in this order before doing anything:
 2. `npm test` — must be green before you change anything.
 3. Do your one chunk. Add/adjust tests in `test/run_tests.mjs` for what you build.
 4. Verify: `npm test` + run the game and play the affected path.
-5. Document: HANDOFF entry + CHANGELOG line + any doc your change invalidates.
-6. Commit with a clear message; attribute yourself (`Builder: Claude|Codex|…`).
-
-## Model routing note (from Jaron)
-
-Heavy coding tasks may fall to Opus 4.8 or Codex when Fable 5 is unavailable.
-This repo is deliberately structured so that works: the physics that is hard to
-re-derive (floating origin, analytic collision, radial-gravity movement,
-traversal derivation) is ALREADY BUILT and explained in ARCHITECTURE.md +
-header comments. When extending those systems, copy their patterns; do not
-re-derive from scratch.
+5. Document: HANDOFF entry + CHANGELOG line + any do

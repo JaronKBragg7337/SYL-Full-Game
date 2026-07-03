@@ -16,6 +16,30 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-03 (later) — Claude (Fable 5, Cowork) — Live at heartbeatobservatory.com/games/syl + mobile + official-game vision
+
+**State:** working. Live URL serving the game; `npm test` 32/32; touch controls in.
+
+**Shipped:** v0.2.0 — see CHANGELOG. Key files: src/ui/touch.js (new), engine.js
+Input (virtual keys), main.js (touch wiring), VISION/ROADMAP/AGENTS/PORTABILITY
+(official-game north star: EVE openworld + KSP building + DayZ/ARC Raiders/
+Battlefield PVP; hosted-not-local rule; deploy procedure). Deployed: copied
+index.html+lib+src into heartbeat-observatory repo at games/syl/ + games-hub
+card; Vercel auto-deployed.
+
+**Verified:** `npm test` green; live URL fetched and browser-tested (boot, no
+console errors); mobile viewport smoke via device emulation. Jaron's real-phone
+feel test still pending — ask him.
+
+**Next up:** Jaron's feel tests (desktop flight + phone touch), then ROADMAP M1
+top item (flight-feel tuning). When touching input/UI, re-check touch controls.
+
+**Gotchas:** deploys are a COPY into the website repo — shipping a change means
+pushing BOTH repos (procedure in PORTABILITY.md; automation is a ROADMAP M6
+item). localStorage saves are per-origin (site vs localhost = different saves).
+
+---
+
 ## 2026-07-03 — Claude (Fable 5, Cowork) — Foundation build: full playable spine of SYL
 
 **State:** working. Game boots, full loop playable, `npm test` = 32/32 green.
@@ -52,22 +76,4 @@ readShipControls in main.js).
 
 **Gotchas:**
 - The three.js import works via import map in the browser and via a
-  node_modules/three shim (auto-written by `npm test`) in Node. Don't npm-install
-  three; the vendored lib/three.module.js is the single copy.
-- F5/F9 are save/load and preventDefault'ed — don't rebind browser-critical keys
-  without doing the same (engine.js Input).
-- Boarding the ship at the home pad fires the home-zone discovery (harmless
-  flavor + a checkpoint save). If a player has an old save and plays fresh
-  without F9 first, that checkpoint overwrites it — acceptable now, fix with a
-  save-slot UI later (ROADMAP M1/M6).
-- Windows/Cowork file-sync note: one Write raced and truncated
-  test/run_tests.mjs mid-session (fixed by appending). If a file looks cut off,
-  check `wc -l` before assuming the last agent wrote broken code.
-- Ship exit places you 5 m to the ship's +X side — if you ever add wide
-  modules there, revisit exitShip in traversal.js.
-- Background browser tabs throttle requestAnimationFrame: if you inspect the
-  game via remote tools while the tab is unfocused, the camera lerp/physics
-  may look frozen or lagged. It is not a bug; focus the tab.
-- The starter ship deliberately CANNOT fly until repaired (engine at 20% is
-  below the 40% degraded threshold). If "nothing happens on W," that's the
-  design, not a bug — the HUD says NOT READY and the toast points to B.
+  node_modules/three shim (auto-written by `npm test`) in Node. Don't npm-in
