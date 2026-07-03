@@ -18,7 +18,7 @@ This is how sessions with no shared memory continue each other's work.
 
 ## 2026-07-03 — Codex — Mobile layout cleanup + analog horizontal fix
 
-**State:** working locally; deploy after commit.
+**State:** working. Gameplay repo and live site are both updated.
 
 **Shipped:** fixed the remaining horizontal control reversal by restoring
 player right-vector math to match the actual camera right vector. Mobile CSS now
@@ -27,8 +27,14 @@ toasts below HUD, map wraps to phone width, ship builder scrolls inside its
 panel, and touch controls hide while panels are open. Ship throttle buttons only
 appear while piloting.
 
-**Verified:** pending final checks in this session; expected `npm test`,
-`node --check`, phone-width Browser screenshots, live deploy smoke.
+**Verified:** `npm test` = 41/41 passed. `node --check` passed for every
+`src/**/*.js` module. Phone-width Browser smoke at 390x844 verified compact HUD,
+toast below HUD, help hidden, map panel inside viewport, and no localhost
+warnings/errors. Static copy deployed via heartbeat-observatory commit d9d7b6f;
+live phone-width Browser smoke at https://heartbeatobservatory.com/games/syl/
+confirmed canvas + HUD render, Fortis Salvage Yard appears in the map, panel
+fits within 390px width, help is hidden, and no heartbeatobservatory.com
+warnings/errors were logged.
 
 **Next up:** Jaron should retest on phone: analog right/left, B ship builder,
 M map, and normal walking/looting near the base.
