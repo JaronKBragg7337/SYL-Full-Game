@@ -18,7 +18,7 @@ This is how sessions with no shared memory continue each other's work.
 
 ## 2026-07-03 — Codex — Mobile panel close button + README drift guard
 
-**State:** working locally; deploy after commit.
+**State:** working. Gameplay repo and live site are both updated.
 
 **Shipped:** added a visible `Close` button to all panels so phone users can
 close inventory/ship-builder/map without Esc or refresh. README now explains
@@ -32,7 +32,11 @@ test counts, or file locations change.
 confirmed the visible Close button, clicked it, and verified the panel display
 returned to `none` while canvas/HUD stayed loaded. Confirmed inventory closes
 the same way and all three panels (inventory, ship builder, map) have a Close
-button. No localhost:8380 warnings/errors were logged.
+button. No localhost:8380 warnings/errors were logged. Static copy deployed via
+heartbeat-observatory commit c735af3; live phone-width Browser smoke at
+https://heartbeatobservatory.com/games/syl/ confirmed canvas render, three panel
+Close buttons, map Close click hiding the panel, and no heartbeatobservatory.com
+warnings/errors.
 
 **Next up:** Jaron should retest phone panels: open M/B/I and close with the
 new Close button without refreshing or losing unsaved inventory/ship-builder
