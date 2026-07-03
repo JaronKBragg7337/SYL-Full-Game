@@ -18,8 +18,7 @@ This is how sessions with no shared memory continue each other's work.
 
 ## 2026-07-03 — Codex — Fix controls, structure collision, and nearby salvage
 
-**State:** working locally. Gameplay changed; sync to live site before handing
-off as shipped.
+**State:** working. Gameplay repo and live site are both updated.
 
 **Shipped:** fixed reversed-feeling on-foot and ship mouse controls
 (player.js/main.js); added analytic structure footprint collision in planet.js
@@ -34,7 +33,11 @@ ROADMAP M2 item.
 checkout was served on http://localhost:8378/; Browser smoke rendered canvas +
 HUD, opened the map, and confirmed Fortis Salvage Yard appears under Earth.
 Mobile-size Browser smoke (390x844) rendered canvas + HUD + touch surfaces.
-No new localhost:8378 warnings/errors were logged.
+No new localhost:8378 warnings/errors were logged. Static copy deployed via
+heartbeat-observatory commit 52f4273; live Browser smoke at
+https://heartbeatobservatory.com/games/syl/ rendered canvas + HUD, showed
+Fortis Salvage Yard on the map, and logged no heartbeatobservatory.com warnings
+or errors.
 
 **Next up:** Jaron should feel-test desktop mouse/WASD and phone touch controls,
 then do the ROADMAP M1 flight-feel tuning pass.
