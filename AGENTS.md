@@ -49,6 +49,8 @@ Read in this order before doing anything:
 3. Do your one chunk. Add/adjust tests in `test/run_tests.mjs` for what you build.
 4. Verify: `npm test` + run the game and play the affected path.
 5. Document: HANDOFF entry + CHANGELOG line + any doc your change invalidates.
+   Always re-check README.md before ending; update it if controls, run URLs,
+   current gameplay loop, verification count, or system/file locations changed.
 6. Commit with a clear message; attribute yourself (`Builder: Claude|Codex|...`).
 7. Push if credentials exist. If gameplay changed, deploy the static copy to
    heartbeatobservatory.com/games/syl using PORTABILITY.md.

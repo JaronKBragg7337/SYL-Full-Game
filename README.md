@@ -12,8 +12,10 @@ agents (Claude, Codex, Opus) continue. **Read AGENTS.md before touching anything
 **Live (anyone, any device incl. phones):** https://heartbeatobservatory.com/games/syl/
 
 Local dev (Windows, zero installs beyond Node): double-click **`START_GAME.cmd`**,
-or `node server.js` → http://localhost:8377. Click the game for mouse control;
-on touch devices the joystick/buttons appear automatically.
+or `node server.js` → http://localhost:8377. That is the default local URL; if
+8377 is already busy, agents may test with `PORT=8378 node server.js`, but the
+normal documented path stays 8377. Click the game for mouse control; on touch
+devices the joystick/buttons appear automatically.
 
 **The bigger picture:** this repo is the living blueprint and public playtest
 for the official SYL game (Unreal/Unity — see VISION.md "The official game"
@@ -43,7 +45,8 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
 Ship: **W/S** throttle · **mouse** pitch/yaw · **Q/A** roll · **Space** vertical thrust ·
 **X** brake · **G** gear · **C** camera · **E** exit (landed)
-Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help · **F5/F9** save/load
+Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
+**Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
 ## Verify it works
 

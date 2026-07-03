@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 0.2.4 — 2026-07-03 — Mobile panel close button + README discipline (Builder: Codex)
+- Added a visible `Close` button to inventory, ship builder, and body-map panels
+  so phone players are no longer trapped in a panel without an Esc key.
+- Updated README controls/run notes: default local URL remains
+  http://localhost:8377; alternate PORT values are only for local testing when
+  8377 is already occupied.
+- Updated AGENTS.md session protocol to require a README.md re-check before
+  ending whenever controls, run URLs, gameplay loop, verification count, or
+  system/file locations change.
+
 ## 0.2.3 — 2026-07-03 — Mobile layout and analog-stick fix (Builder: Codex)
 - Fixed the remaining reversed horizontal movement by aligning A/D movement
   with the actual first-person camera right vector; the test now checks camera

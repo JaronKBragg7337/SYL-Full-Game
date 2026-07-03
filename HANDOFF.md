@@ -16,6 +16,33 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-03 — Codex — Mobile panel close button + README drift guard
+
+**State:** working locally; deploy after commit.
+
+**Shipped:** added a visible `Close` button to all panels so phone users can
+close inventory/ship-builder/map without Esc or refresh. README now explains
+that 8377 is the default local URL and alternate PORT values are only temporary
+test ports when 8377 is busy. AGENTS.md now explicitly requires checking
+README.md before ending and updating it when controls, run URLs, gameplay loop,
+test counts, or file locations change.
+
+**Verified:** `npm test` = 41/41 passed. `node --check` passed for every
+`src/**/*.js` module. Phone-width Browser smoke at 390x844 opened the map,
+confirmed the visible Close button, clicked it, and verified the panel display
+returned to `none` while canvas/HUD stayed loaded. Confirmed inventory closes
+the same way and all three panels (inventory, ship builder, map) have a Close
+button. No localhost:8380 warnings/errors were logged.
+
+**Next up:** Jaron should retest phone panels: open M/B/I and close with the
+new Close button without refreshing or losing unsaved inventory/ship-builder
+work.
+
+**Gotchas:** close buttons call the same `closePanels()` path as Esc/same-key;
+keep future panel close behavior centralized there.
+
+---
+
 ## 2026-07-03 — Codex — Mobile layout cleanup + analog horizontal fix
 
 **State:** working. Gameplay repo and live site are both updated.
