@@ -1,0 +1,12 @@
+{
+  "name": "syl-foundation",
+  "version": "0.1.0",
+  "description": "Space You Land — world-scale space game foundation (browser/Three.js). Multiple planets, real surface-to-space traversal, modular piece-by-piece ships, factions, persistence.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/run_tests.mjs"
+  },
+  "author": "Jaron + Claude (Fable 5)",
+  "license": "MIT"
+}
