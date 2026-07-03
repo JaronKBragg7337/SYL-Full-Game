@@ -16,6 +16,35 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-03 — Codex — Fix controls, structure collision, and nearby salvage
+
+**State:** working locally. Gameplay changed; sync to live site before handing
+off as shipped.
+
+**Shipped:** fixed reversed-feeling on-foot and ship mouse controls
+(player.js/main.js); added analytic structure footprint collision in planet.js
+and wired it into player movement; added Fortis Salvage Yard as a nearby Earth
+zone with depot structures; moved pickup placement into src/world/pickups.js and
+added outpost/salvage-yard surplus crates for easier ship testing. Loot crates
+are still persistent one-shot pickups; timed respawn/resource nodes are a future
+ROADMAP M2 item.
+
+**Verified:** `npm test` = 41/41 passed. `node --check` passed for every
+`src/**/*.js` module. Port 8377 was occupied by an older local server, so this
+checkout was served on http://localhost:8378/; Browser smoke rendered canvas +
+HUD, opened the map, and confirmed Fortis Salvage Yard appears under Earth.
+Mobile-size Browser smoke (390x844) rendered canvas + HUD + touch surfaces.
+No new localhost:8378 warnings/errors were logged.
+
+**Next up:** Jaron should feel-test desktop mouse/WASD and phone touch controls,
+then do the ROADMAP M1 flight-feel tuning pass.
+
+**Gotchas:** structure collision is intentionally analytic footprint collision,
+not Three.js mesh collision. Keep new blockers registered in planet.js beside
+the authored visual layout so browser and Unreal/Unity ports stay aligned.
+
+---
+
 ## 2026-07-03 — Codex — Repair sync-truncated documentation tails
 
 **State:** working. Documentation set is complete again; no gameplay changes.

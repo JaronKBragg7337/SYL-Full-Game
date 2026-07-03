@@ -29,8 +29,13 @@ if (!existsSync(join(shimDir, 'package.json'))) {
 
 const THREE = await import('three');
 const { BODIES, getBody } = await import('../src/world/bodies.js');
-const { terrainRadiusAt, altitudeAt, gravityAt, upAt, dominantBody, buildBodyVisual, zoneWorldPos } =
+const {
+  terrainRadiusAt, altitudeAt, gravityAt, upAt, dominantBody, buildBodyVisual,
+  zoneWorldPos, resolveStructureCollision, structureCollidersForBody,
+} =
   await import('../src/world/planet.js');
+const { PICKUPS } = await import('../src/world/pickups.js');
+const { Player } = await import('../src/player/player.js');
 const { Ship } = await import('../src/ship/ship.js');
 const { installPart, repairPart, loadFuel, applyStarterDamage, readinessReport } =
   await import('../src/ship/shipBuilder.js');
@@ -59,6 +64,11 @@ check('every landing zone id unique', (() => {
 check('7 factions registered', FACTIONS.length === 7, `got ${FACTIONS.length}`);
 check('Fortis is canon (not placeholder)', FACTIONS.find(f => f.id === 'fortis')?.placeholder === false);
 check('item registry resolves ship part items', ITEMS.filter(i => i.kind === 'part').every(i => i.partId));
+check('pickup ids unique', new Set(PICKUPS.map(p => p.id)).size === PICKUPS.length);
+check('pickups reference real zones/items', PICKUPS.every(p => {
+  const body = BODIES.find(b => b.id === p.bodyId);
+  return body?.landingZones.some(z => z.id === p.zoneId) && !!getItem(p.itemId);
+}));
 
 console.log('\n== 2. World math (visual/collision agreement) ==');
 // Build visuals to initialize derived fields (_centerV, zone dirs).
@@ -96,6 +106,17 @@ const earth = getBody('earth');
     `Δ=${Math.abs(ro - rc).toFixed(2)}m`);
 }
 {
+  const colliders = structureCollidersForBody(earth);
+  check('Earth structures expose analytic colliders', colliders.length >= 6, `got ${colliders.length}`);
+  const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
+  const insideBunker = offsetWorld(earth, zone, 40, 0, 0.2);
+  const moved = resolveStructureCollision(earth, insideBunker, 0.45);
+  const en = localOffset(earth, zone, insideBunker);
+  const outside = Math.abs(en.east - 40) >= 8.44 || Math.abs(en.north) >= 6.44;
+  check('structure collision pushes player outside bunker footprint', moved && outside,
+    `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
+}
+{
   const nearEarth = earth._centerV.clone().add(new THREE.Vector3(earth.radius * 1.5, 0, 0));
   check('dominant body near Earth is Earth', dominantBody(BODIES, nearEarth).id === 'earth');
   const moon = getBody('moon');
@@ -104,7 +125,35 @@ const earth = getBody('earth');
     dominantBody(BODIES, nearMoon).id === 'moon');
 }
 
-console.log('\n== 3. Modular ship: damage → gather → repair → ready ==');
+console.log('\n== 3. Controls and local playability ==');
+{
+  const player = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);
+  const spawn = earth.landingZones.find(z => z.id === earth.spawn.zoneId);
+  player.placeAt(zoneWorldPos(earth, spawn, 0.2));
+  player.yaw = 0; player.pitch = 0;
+  const up = upAt(earth, player.worldPos);
+  const frame = player.localFrame(up);
+  const expectedRight = up.clone().cross(frame.fwd).normalize();
+  check('A/D right vector matches camera frame', frame.right.dot(expectedRight) > 0.999);
+  const camPos = new THREE.Vector3(), camQuat = new THREE.Quaternion();
+  player.cameraPose(camPos, camQuat);
+  const cameraForward = new THREE.Vector3(0, 0, -1).applyQuaternion(camQuat).normalize();
+  check('first-person camera looks where W moves', cameraForward.dot(frame.fwd) > 0.999,
+    `dot=${cameraForward.dot(frame.fwd).toFixed(3)}`);
+}
+{
+  const counts = {};
+  for (const p of PICKUPS.filter(p => p.bodyId === 'earth' && ['fortis_outpost', 'fortis_salvage_yard'].includes(p.zoneId))) {
+    counts[p.itemId] = (counts[p.itemId] || 0) + 1;
+  }
+  check('near-base pickups include power + gear parts', counts.part_power >= 1 && counts.part_gear >= 1);
+  check('near-base pickups include repair surplus', (counts.salvage_alloy || 0) >= 5 && (counts.wiring_loom || 0) >= 4,
+    JSON.stringify(counts));
+  check('near-base pickups include flight-test fuel surplus', (counts.fuel_hydrazine || 0) >= 6,
+    JSON.stringify(counts));
+}
+
+console.log('\n== 4. Modular ship: damage → gather → repair → ready ==');
 const ship = new Ship(stubEngine, BODIES);
 applyStarterDamage(ship);
 check('starter ship is NOT flight-ready', !ship.stats.ready, JSON.stringify(ship.stats.missing));
@@ -126,7 +175,7 @@ check('ship becomes FLIGHT READY after repairs+installs', ship.stats.ready, rep.
 check('fuel loaded', ship.fuel > 50, `fuel=${ship.fuel}`);
 check('modules affect stats (thrust > 0, mass grew)', ship.stats.thrust > 0 && ship.stats.mass > 200);
 
-console.log('\n== 4. FULL TRAVERSAL SIM: Earth pad → space → Moon landing ==');
+console.log('\n== 5. FULL TRAVERSAL SIM: Earth pad → space → Moon landing ==');
 // Uses the REAL Ship integrator — this is the gameplay loop, headless.
 const pad = earth.landingZones[0];
 const start = zoneWorldPos(earth, pad, 1.95);
@@ -176,7 +225,7 @@ check('ship survived (still flight-capable or repairable)', ship.stats.mass > 0)
 phaseLog.push('LANDED@moon');
 console.log(`  info: phases ${phaseLog.join(' → ')}, total sim time ${t.toFixed(0)}s game-time`);
 
-console.log('\n== 5. Save/load round-trip (no browser localStorage needed) ==');
+console.log('\n== 6. Save/load round-trip (no browser localStorage needed) ==');
 {
   const ws = new WorldState(); const fs2 = new FactionState();
   ws.discoverBody('moon'); ws.discoverZone('tranquility_pad'); ws.setFlag('reachedSpace');
@@ -202,3 +251,30 @@ console.log('\n== 5. Save/load round-trip (no browser localStorage needed) ==');
 console.log(`\n========================================`);
 console.log(`RESULT: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
+
+function zoneFrame(dirUnit) {
+  const east = new THREE.Vector3(0, 1, 0).cross(dirUnit);
+  if (east.lengthSq() < 1e-6) east.set(1, 0, 0);
+  east.normalize();
+  const north = dirUnit.clone().cross(east).normalize();
+  return { east, north };
+}
+
+function offsetWorld(body, zone, eastM, northM, extraHeight = 0) {
+  const frame = zoneFrame(zone._dirV);
+  const dir = zone._dirV.clone()
+    .addScaledVector(frame.east, eastM / body.radius)
+    .addScaledVector(frame.north, northM / body.radius)
+    .normalize();
+  const r = terrainRadiusAt(body, dir) + extraHeight;
+  return dir.multiplyScalar(r).add(body._centerV);
+}
+
+function localOffset(body, zone, worldPos) {
+  const frame = zoneFrame(zone._dirV);
+  const dir = worldPos.clone().sub(body._centerV).normalize();
+  return {
+    east: dir.dot(frame.east) * body.radius,
+    north: dir.dot(frame.north) * body.radius,
+  };
+}

@@ -25,7 +25,9 @@ KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
 You spawn on **Earth** at the **Fortis Outpost**. Your gunship on the pad is damaged:
 dead engine, missing power cell, missing landing gear, empty tanks.
 
-1. **Gather** the salvage crates around the outpost (walk up, press **F**).
+1. **Gather** salvage crates around the outpost and nearby **Fortis Salvage Yard**
+   (walk up, press **F**). Crates are persistent one-shot pickups today; resource
+   node respawn is a future system.
 2. **Repair & build** at the ship (press **B**): repair the engine with alloy, install
    the power cell and gear strut, load hydrazine fuel. The builder shows honest
    readiness: mass, thrust, TWR, power budget.
@@ -46,7 +48,7 @@ Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help · *
 ## Verify it works
 
 ```
-npm test        # 32 headless checks incl. a full Earth→space→Moon-landing sim
+npm test        # 41 headless checks incl. controls, collision, and Earth→Moon sim
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -60,6 +62,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Planet/body **data registry** | `src/world/bodies.js` |
 | Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
 | World progress state | `src/world/worldState.js` |
+| Pickup placement | `src/world/pickups.js` |
 | Surface⇄space **state machine** | `src/world/traversal.js` |
 | On-foot radial-gravity player | `src/player/player.js` |
 | Ship entity + 6DOF flight | `src/ship/ship.js` |

@@ -30,8 +30,8 @@ de-risk the official build.
       distances; expose tunables as a constants block in ship.js)
 - [ ] Landing aids: velocity vector indicator, ground-radar altitude, target-zone
       marker while approaching (HUD additions in ui.js)
-- [ ] On-foot collision with structures (capsule vs placed-structure primitives —
-      keep analytic-first: structures register simple colliders)
+- [x] On-foot collision with structures (capsule vs placed-structure primitives —
+      analytic footprint colliders, 2026-07-03)
 - [ ] Crash/repair loop polish: gear-only soft landings, per-module damage
       readout toast, stranded-recovery mechanic (emergency beacon → Fortis tow
       at standing cost — first faction-relationship USE)
@@ -47,7 +47,8 @@ de-risk the official build.
       (NEVER a second height source) with crater/ridged noise variants per body
 - [ ] Free-form ship builder: attachment-node graph replacing fixed slots
       (reuse shipBuilder actions; keep slotIds stable for save migration)
-- [ ] Resource nodes + mining tool on-foot loop (extends items/inventory)
+- [ ] Resource nodes + mining tool on-foot loop (extends items/inventory);
+      this is where timed respawn belongs, not one-shot salvage crates
 - [ ] More bodies: gas-giant no-landing body, ice moon (data + one new terrain
       noise variant each — prove the registry scales to 6+)
 - [ ] Ship cargo transfer UI (inventory ⇄ cargo pods; cargoCap already computed)

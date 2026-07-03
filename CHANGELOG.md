@@ -1,5 +1,20 @@
 # CHANGELOG.md
 
+## 0.2.2 — 2026-07-03 — Controls, collision, and testable salvage (Builder: Codex)
+- Fixed backwards-feeling controls: first-person camera now looks along the
+  same vector W moves, A/D use the correct right vector, mouse-up looks up, and
+  ship mouse pitch/yaw use the same non-inverted convention.
+- Added analytic structure collision footprints for zone structures so the
+  player can no longer walk through bunkers, relay masts, depot sheds, or
+  beacons; still no mesh physics or flat-world collision.
+- Added a nearby Fortis Salvage Yard on Earth with depot structures and extra
+  supplies, plus surplus outpost crates so Jaron can repair/fuel the starter
+  ship even if he misses a few pickups.
+- Moved pickup placement into `src/world/pickups.js`; crates remain persistent
+  one-shot pickups for now, with respawning/resource nodes tracked in ROADMAP.
+- Expanded `npm test` from 32 to 41 checks covering controls alignment,
+  structure collision, pickup manifest validity, and near-base supply margin.
+
 ## 0.2.1 — 2026-07-03 — Documentation truncation repair (Builder: Codex)
 - Repaired sync-truncated tails in README.md, AGENTS.md, HANDOFF.md,
   CHANGELOG.md, ROADMAP.md, PORTABILITY.md, and VISION.md.
