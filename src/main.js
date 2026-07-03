@@ -397,4 +397,12 @@ engine.addUpdater((dt) => {
 // ---------------------------------------------------------------------------
 // Start.
 // ---------------------------------------------------------------------------
-document.getElementById('boot
+document.getElementById('boot-msg')?.remove();
+if (SaveSystem.hasSave()) {
+  ui.showToast('Save found — press F9 to continue, or play fresh.', 6000);
+}
+ui.showCenter(
+  'SYL — FOUNDATION BUILD<br>' +
+  '<span class="dim">Your ship is damaged. Gather crates (F), repair and fuel it (B), then fly to another world.<br>' +
+  'Click to take mouse control. H toggles help.</span>', 9000);
+engine.start();

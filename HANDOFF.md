@@ -68,4 +68,6 @@ readShipControls in main.js).
 - Background browser tabs throttle requestAnimationFrame: if you inspect the
   game via remote tools while the tab is unfocused, the camera lerp/physics
   may look frozen or lagged. It is not a bug; focus the tab.
-- The start
+- The starter ship deliberately CANNOT fly until repaired (engine at 20% is
+  below the 40% degraded threshold). If "nothing happens on W," that's the
+  design, not a bug — the HUD says NOT READY and the toast points to B.

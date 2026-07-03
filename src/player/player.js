@@ -186,4 +186,8 @@ export class Player {
 // Module-scope temps.
 const _up = new THREE.Vector3(), _up2 = new THREE.Vector3(), _g = new THREE.Vector3();
 const _move = new THREE.Vector3(), _rel = new THREE.Vector3();
-const _east = new THREE.Vector
+const _east = new THREE.Vector3(), _north = new THREE.Vector3();
+const _fwd = new THREE.Vector3(), _right = new THREE.Vector3();
+const _refY = new THREE.Vector3(0, 1, 0), _refX = new THREE.Vector3(1, 0, 0);
+const _m = new THREE.Matrix4(), _tmpV = new THREE.Vector3(), _tmpV2 = new THREE.Vector3();
+const _zero = new THREE.Vector3();
