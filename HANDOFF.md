@@ -16,6 +16,33 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Ship visual rotation fixed and chase camera locked
+
+**State:** working. Jaron confirmed the real breakthrough: the ship now visibly
+rotates like a craft instead of acting fixed. Follow-up issue is camera
+readability while banking, so chase view is now locked behind/above the ship
+nose.
+
+**Shipped:** fixed the renderer/visual mismatch by letting
+`trackWorldObject()` entries carry an optional authoritative quaternion and by
+registering `ship.group` with `quaternion: ship.quaternion`. Removed BANK/Q/R
+camera-follow behavior and changed chase camera to a locked forward rig using
+ship nose + planet up; it does not inherit ship roll. Updated README/help text,
+CHANGELOG, AGENTS, and this handoff.
+
+**Verified:** run `npm test` and browser-visible checks before ending. The key
+check must inspect `game.ship.group.quaternion`, not only `game.ship.quaternion`.
+
+**Next up:** Jaron should phone-test the locked chase view. If it is too close
+or too high/low, tune only the chase offset constants in `updateCamera()`.
+
+**Gotchas:** The bug that wasted time was visual sync, not flight math:
+physics quaternion changed but the local ship group did not. Future agents must
+verify rendered group rotation for vehicle work. BANK/buttons should not move
+camera directly; chase follows ship nose as a rig.
+
+---
+
 ## 2026-07-04 — Codex — Controls/camera/vehicles wiring guide added
 
 **State:** Jaron wants to personally inspect and wire the control/camera/vehicle

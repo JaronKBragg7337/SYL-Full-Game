@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 2026-07-04 — Ship visual rotation + locked chase camera (Builder: Codex)
+- Fixed the actual visible-ship rotation bug: the ship physics quaternion was
+  changing, but the floating-origin renderer only copied position. The ship
+  visual now registers its authoritative quaternion and the renderer copies it
+  each frame.
+- Removed BANK/Q/R camera-follow behavior. BANK now rotates the visible ship
+  while the chase camera stays locked behind/above the ship nose.
+- Added a regression check so future agents verify the ship visual is wired to
+  authoritative rotation instead of trusting physics-only state.
+
 ## 0.2.20 — 2026-07-04 — Controls/camera/vehicles wiring guide (Builder: Codex)
 - Added `CONTROLS_CAMERA_VEHICLES_GUIDE.md` so Jaron can see exactly where
   keyboard, touch analog, camera orbit, and ship physics are wired.

@@ -11,6 +11,18 @@ Important current repo note: this guide is rebased on top of Claude/Fable's
 assisted-flight early return, restored a chase camera that follows the ship,
 made terrain collision mesh-true, and added a solid ship hull.
 
+Critical 2026-07-04 lesson from Jaron's phone tests: physics rotation is not
+enough. The ship quaternion was changing while the visible `ship.group`
+remained visually fixed because the floating-origin renderer only copied
+position. Vehicle work must verify both:
+
+- `game.ship.quaternion`
+- `game.ship.group.quaternion`
+
+They should match during play. The ship now registers its visual with
+`trackWorldObject({ worldPos, object3d, quaternion })`, and `engine.js` copies
+that quaternion during floating-origin sync.
+
 ## The Files That Matter
 
 ### Raw Input
@@ -96,13 +108,15 @@ This decides where the camera is while:
 - piloting in chase camera
 - piloting in cockpit camera
 
-Key variables:
+Current chase behavior:
 
-- `chaseCam`: true = third-person chase, false = cockpit.
-- `shipTouchCamYaw` / `shipTouchCamPitch`: extra orbit offset for chase camera.
-- `shipCamBaseQuat`: current chase-camera base orientation.
+- `chaseCam`: true = third-person locked chase, false = cockpit.
+- Chase camera sits behind/above the ship nose.
+- Chase camera uses current planet up as its up vector, so ship banking does
+  not roll the horizon.
+- BANK/Q/R and analog controls must never directly orbit the camera.
 
-This file should be the only place where ship camera orbit is changed. Ship
+This file should be the only place where ship camera behavior is changed. Ship
 physics should not read mouse input directly.
 
 ### Ship Physics And Rotation

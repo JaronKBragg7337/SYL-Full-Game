@@ -30,6 +30,9 @@ Read in this order before doing anything:
 - **Never** introduce a flat-world assumption, a loading screen, a teleport
   masquerading as travel, or a second terrain-height source.
 - **Never** store gameplay positions in mesh positions (floating-origin rule).
+- If a gameplay object rotates, its visual must receive the same authoritative
+  quaternion through `trackWorldObject({ ..., quaternion })`. Do not trust a
+  physics-quaternion test alone; verify the rendered group quaternion too.
 - **Never** add a physics engine without reading DECISIONS.md #3 first.
 - The ship stays modular. New ship features extend shipParts/shipBuilder;
   they do not bypass them.
