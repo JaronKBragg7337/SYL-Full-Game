@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Code-built Fortis gunship visual
+
+**State:** working on `main`. This is the first browser/mobile-safe port of
+the Unreal Fortis walkable gunship source into SYL web.
+
+**Shipped:** `src/ship/ship.js` now renders a code-built
+`Fortis_Gunship_CodeBuilt` silhouette based on
+`SpaceYouLand/_authoring/make_walkable_gunship.py`: physics deck, side shells,
+roof, cockpit glass, rear ramp/pressure door, wings, engines, tanks, gear,
+pilot seat, console, trim, and optional module markers. No FBX/GLB/Blender
+payload was added, so the mobile page stays light. Module state remains
+authoritative and damaged pieces darken.
+
+**Verified:** run tests/smoke before public sync.
+
+**Next up:** add actual boarding/interior interaction points: exterior hatch,
+ramp open/close, pilot seat, and camera seat anchors.
+
+**Gotchas:** visual only, not a full walkable interior collision mesh yet. The
+ship collision remains analytic hull/structure footprint for mobile safety.
+
+---
+
 ## 2026-07-04 — Codex — Assisted ship piloting default
 
 **State:** working on `main` after Jaron reported both mobile and desktop ship

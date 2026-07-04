@@ -192,6 +192,11 @@ check('Ship constructor initializes modules for every slot',
   Object.keys(ship.modules).length === SLOTS.length);
 check('starter ship is NOT flight-ready', !ship.stats.ready, JSON.stringify(ship.stats.missing));
 check('starter ship has no fuel', ship.fuel === 0);
+check('ship visual uses code-built Fortis gunship silhouette',
+  !!ship.group.getObjectByName('Fortis_Gunship_CodeBuilt') &&
+  !!ship.group.getObjectByName('gunship:cockpit_glass_left') &&
+  !!ship.group.getObjectByName('gunship:rear_ramp') &&
+  !!ship.group.getObjectByName('gunship:port_engine'));
 const inv = new Inventory();
 inv.add('part_power'); inv.add('part_gear');
 inv.add('salvage_alloy', 4); inv.add('wiring_loom', 3); inv.add('fuel_hydrazine', 4);

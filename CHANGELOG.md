@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 0.2.15 — 2026-07-04 — Code-built Fortis walkable gunship visual (Builder: Codex)
+- Ported the `SpaceYouLand/_authoring/make_walkable_gunship.py` layout into a
+  mobile-safe Three.js primitive silhouette instead of shipping raw FBX/Blender:
+  physics deck, side shells, roof, cockpit glass, rear ramp/pressure door,
+  wings, engines, tanks, landing gear, pilot seat, console, trim, and module
+  markers.
+- The module system remains authoritative: missing/damaged installed modules
+  still affect readiness and darken/omit matching visual pieces.
+- Added a headless visual hierarchy check for the code-built Fortis gunship.
+
 ## 0.2.14 — 2026-07-04 — Assisted ship piloting becomes the default (Builder: Codex)
 - Changed normal ship piloting to the dev-fly-style direct control spine:
   `W/S` or mobile stick up/down now means forward/reverse, `A/D` or mobile
