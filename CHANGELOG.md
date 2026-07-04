@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+## 0.2.9 — 2026-07-04 — Mobile-safe SYL dev editor first slice (Builder: Codex)
+- Added opt-in `?dev=1` DEV editor tools: ready a mobile-safe test ship, give a
+  supply kit, fill fuel, move the ship to the player, jump the player to the
+  ship, save, and toggle fly-person mode.
+- Kept the first editor slice code-built and DOM-based so it stays phone-safe;
+  no Blender/GLB assets added yet.
+- Added headless tests for the dev actions. `npm test` 57 -> 62.
+
 ## 0.2.8 — 2026-07-04 — Promote Kimi expansion + multiplayer to main (Builder: Codex)
 - Promoted the tested `test/kimi-expansion-pack` work onto `main`: expanded
   items/bodies/ship parts/crafting, Heartbeat Realtime visibility, and the

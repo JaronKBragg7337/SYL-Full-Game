@@ -45,6 +45,7 @@ const { FactionState, FACTIONS } = await import('../src/factions/factions.js');
 const { WorldState } = await import('../src/world/worldState.js');
 const { ITEMS, getItem } = await import('../src/items/items.js');
 const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recipes.js');
+const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = '') {
@@ -316,6 +317,23 @@ console.log('\n== 8. Turning (yaw authority) ==');
   for (let i = 0; i < 120; i++) t.tick(dt, true, ctl); // release
   check('yaw settles when input released (damping works)', t.angVel.length() < 0.05,
     `angVel=${t.angVel.length().toFixed(3)}`);
+}
+
+console.log('\n== 9. Dev editor tools ==');
+{
+  const testShip = new Ship(stubEngine, BODIES);
+  readyShip(testShip);
+  check('dev readyShip makes the ship flight-ready', testShip.stats.ready);
+  check('dev readyShip fills fuel to capacity', testShip.fuel === testShip.stats.fuelCap && testShip.fuel > 0);
+  check('dev readyShip installs the readiness-critical slots',
+    !!testShip.modules.frame_core && !!testShip.modules.cockpit_fwd &&
+    !!testShip.modules.engine_main && !!testShip.modules.power_bay &&
+    !!testShip.modules.tank_left && testShip.stats.gearCount >= 3);
+
+  const kitInv = new Inventory();
+  giveInventoryKit(kitInv);
+  check('dev giveInventoryKit adds resources', kitInv.count('salvage_alloy') >= 8 && kitInv.count('fuel_hydrazine') >= 8);
+  check('dev giveInventoryKit adds installable parts', ITEMS.filter(i => i.kind === 'part').every(i => kitInv.count(i.id) >= 1));
 }
 
 console.log(`\n========================================`);

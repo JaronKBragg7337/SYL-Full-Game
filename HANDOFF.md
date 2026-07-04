@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — SYL dev editor first slice
+
+**State:** working on `main`. Public SYL already carries Kimi expansion,
+Realtime visibility, and the yaw/touch-turn fix.
+
+**Shipped:** added `src/dev/devTools.js`, an opt-in `?dev=1` editor/god panel.
+It exposes ready test ship, supply kit, fill fuel, move ship to player, player
+to ship, save now, and fly-person mode. The first slice is phone-safe:
+code-built state changes + DOM UI only, no heavy external 3D assets.
+
+**Verified:** `npm test` 62/62 and `node --check` on `src/**/*.js` plus tests
+before syncing to Heartbeat.
+
+**Next up:** build prefab placement and blueprint persistence: code-built
+building pieces, snap-compatible wall/window/door sockets, then ship room and
+seat modules.
+
+**Gotchas:** `?dev=1` persists the DEV button in localStorage for that browser.
+This is a playtest convenience, not a security boundary. Future public/admin
+tools should use Heartbeat auth/admin checks.
+
+---
+
 ## 2026-07-04 — Codex — Promote SYL test branch to main
 
 **State:** `main` now contains the tested Kimi expansion, Heartbeat Realtime

@@ -57,10 +57,16 @@ Ship: **W/S** throttle · **mouse** pitch/yaw · **A/D** turn · **Q/E** roll ·
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
+Builder/dev tools: add `?dev=1` to the URL to reveal the **DEV** button. It can
+ready a mobile-safe test ship, give a supply kit, move the ship to you, save, and
+toggle fly-person mode for testing. Fly-person uses WASD, mouse/touch look,
+Space up, X/Ctrl down, Shift fast. The tools are code-built and phone-safe; no
+heavy external assets are required.
+
 ## Verify it works
 
 ```
-npm test        # 57 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting, ship yaw
+npm test        # 62 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting, ship yaw, dev tools
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -88,6 +94,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Save/load (localStorage, backend-ready) | `src/save/save.js` |
 | HUD/panels | `src/ui/ui.js` |
 | Touch controls | `src/ui/touch.js` |
+| Dev/editor tools | `src/dev/devTools.js` |
 | Headless tests | `test/run_tests.mjs` |
 
 ## Docs
