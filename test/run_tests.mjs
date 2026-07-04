@@ -46,7 +46,7 @@ const { WorldState } = await import('../src/world/worldState.js');
 const { ITEMS, getItem } = await import('../src/items/items.js');
 const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recipes.js');
 const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
-const { joystickAxes, joystickMoveKeys, joystickShipControls } = await import('../src/ui/touch.js');
+const { joystickAxes, joystickMoveKeys, joystickShipControls, joystickShipAttitude } = await import('../src/ui/touch.js');
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = '') {
@@ -150,11 +150,15 @@ console.log('\n== 3. Controls and local playability ==');
   const up = joystickAxes(0, -radius, radius);
   const move = joystickMoveKeys(0, -radius, radius);
   const shipStick = joystickShipControls(radius, -radius, radius);
+  const attitudeStick = joystickShipAttitude(radius, -radius, radius);
   check('touch joystick exposes normalized axes', right.x > 0.99 && up.y < -0.99);
   check('touch joystick still maps to WASD on foot', move.forward && !move.back);
   check('touch joystick produces ship side-axis + throttle while piloting',
     shipStick.yaw > 0.45 && shipStick.throttle > 0.65 && shipStick.pitch === 0,
     `side=${shipStick.yaw.toFixed(2)} throttle=${shipStick.throttle.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
+  check('right attitude stick maps to bank + nose pitch',
+    attitudeStick.bank > 0.7 && attitudeStick.pitch < -0.7,
+    `bank=${attitudeStick.bank.toFixed(2)} pitch=${attitudeStick.pitch.toFixed(2)}`);
 }
 {
   const player = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);

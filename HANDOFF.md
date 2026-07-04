@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Mobile ship controls use dual sticks
+
+**State:** working in tests. Jaron said the flight controls felt right, but
+mobile became thumb-heavy because the right thumb had to manage BANK and NOSE
+buttons.
+
+**Shipped:** replaced mobile BANK/NOSE buttons with a right-side ATTITUDE
+joystick. Left stick remains fly/throttle/strafe/lift. Right stick X feeds
+`touchShipBank`; right stick Y feeds `touchShipPitch`. PC key mapping is
+unchanged.
+
+**Verified:** `npm test` passes with 88/88 checks, including a right attitude
+stick mapping regression.
+
+**Next up:** phone-test ergonomics. If the right stick feels too close to the
+browser safe area, tune `#att-base` in `src/ui/touch.js`; do not put BANK/NOSE
+back as four separate flight buttons unless Jaron asks.
+
+**Gotchas:** Right attitude stick must be excluded from touch-look handling.
+It is a ship-control surface, not a camera-look surface.
+
+---
+
 ## 2026-07-04 — Codex — High-flight nose pitch and module stat accounting
 
 **State:** working in tests. Jaron confirmed the bank/locked-chase behavior

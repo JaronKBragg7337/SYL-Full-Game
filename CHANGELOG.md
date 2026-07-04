@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 2026-07-04 — Mobile dual-stick ship attitude (Builder: Codex)
+- Replaced separate mobile BANK and NOSE buttons with a right-side ATTITUDE
+  joystick. Horizontal stick motion bank-turns the ship; vertical motion pitches
+  the nose in high flight.
+- Kept desktop controls unchanged: Q/R bank-turn, ↑/↓ pitch.
+- Added a regression check for the right attitude stick mapping.
+
 ## 2026-07-04 — High-flight nose pitch + module stat accounting (Builder: Codex)
 - Added NOSE UP / NOSE DOWN mobile buttons and ↑/↓ keyboard pitch so the ship
   can aim up/down once safely airborne instead of staying planet-upright forever.

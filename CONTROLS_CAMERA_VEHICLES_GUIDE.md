@@ -43,19 +43,22 @@ Most control changes should happen in `src/main.js`, not here.
 
 File: `src/ui/touch.js`
 
-This owns the on-screen analog stick and mobile buttons.
+This owns the on-screen analog sticks and mobile buttons.
 
 Key places:
 
-- `joystickShipControls(dx, dy, radius)` maps analog stick movement to ship
-  steering/throttle.
-- `setMove(dx, dy, radius)` decides whether the stick controls on-foot movement
-  or ship movement.
+- `joystickShipControls(dx, dy, radius)` maps the left stick to ship
+  strafe/throttle.
+- `joystickShipAttitude(dx, dy, radius)` maps the right ATTITUDE stick to ship
+  bank/pitch.
+- `setMove(dx, dy, radius)` decides whether the left stick controls on-foot
+  movement or ship movement.
 - The look handler near the bottom adds to `input.mouseDX` / `input.mouseDY`
   only for touches outside the joystick/buttons/panels.
 
-If mobile analog left/right feels backwards, change the sign in
-`joystickShipControls`.
+If mobile left-stick strafe feels backwards, change the sign in
+`joystickShipControls`. If right-stick bank or pitch feels backwards, change
+the relevant sign in `joystickShipAttitude`.
 
 Current ship mapping:
 
@@ -64,6 +67,15 @@ return {
   yaw: axes.x * 0.65,
   pitch: 0,
   throttle: -axes.y,
+};
+```
+
+Current attitude-stick mapping:
+
+```js
+return {
+  bank: axes.x,
+  pitch: axes.y,
 };
 ```
 
@@ -94,9 +106,8 @@ Current mapping in this repo:
 - `Space`: thrust/lift up
 - `Z`: descend
 - `X` / Ctrl: brake
-- Touch analog: forward/reverse + strafe + auto-lift while held
-- Touch BANK buttons: ship heading/roll, not camera orbit
-- Touch NOSE buttons: high-flight pitch
+- Touch left stick: forward/reverse + strafe + auto-lift while held
+- Touch right ATTITUDE stick: X = ship heading/roll, Y = high-flight pitch
 - Touch DESCEND: overrides lift for landing
 
 Current missing gameplay verbs:
@@ -125,8 +136,9 @@ Current chase behavior:
 - Chase camera uses current planet up as its preferred up vector, so ship
   banking does not roll the horizon unless the nose is nearly vertical and a
   fallback up vector is needed.
-- BANK/Q/R, NOSE buttons, and analog controls must never directly orbit the
-  camera. They rotate/move the ship; the camera follows as a rig.
+- BANK/Q/R, the right ATTITUDE stick, and the left fly stick must never
+  directly orbit the camera. They rotate/move the ship; the camera follows as
+  a rig.
 
 This file should be the only place where ship camera behavior is changed. Ship
 physics should not read mouse input directly.
@@ -184,9 +196,9 @@ addition:
 - `ArrowUp`: pitch nose up once safely airborne.
 - `ArrowDown`: pitch nose down once safely airborne.
 - Mouse cursor / mouse look: on-foot camera only; ship chase stays locked.
-- Mobile analog: ship forward/reverse/strafe + lift while held.
-- Mobile BANK buttons: turn-bank the ship.
-- Mobile NOSE buttons: pitch the ship in high flight.
+- Mobile left stick: ship forward/reverse/strafe + lift while held.
+- Mobile right ATTITUDE stick: turn-bank left/right and pitch nose up/down in
+  high flight.
 - Mobile look drag outside the analog: do not use for ship chase orbit unless
   a separate free-camera mode is deliberately added.
 
@@ -215,7 +227,7 @@ this.quaternion.premultiply(_q).normalize();
 Do not move the camera directly here. Rotate the ship; the locked chase rig
 will follow.
 
-### 2. `ArrowUp` / `ArrowDown` And NOSE Buttons
+### 2. `ArrowUp` / `ArrowDown` And Right-Stick Pitch
 
 Open `src/main.js`, `readShipControls(dt)`.
 
@@ -224,11 +236,10 @@ const keyPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 
 controls.pitch = keyPitch;
 ```
 
-Open `src/ui/touch.js`. Mobile NOSE buttons set the same virtual keys:
+Open `src/ui/touch.js`. Mobile right-stick Y writes `touchShipPitch` directly:
 
-```html
-<button data-code="ArrowUp">NOSE UP</button>
-<button data-code="ArrowDown">NOSE DOWN</button>
+```js
+input.touchShipPitch = att.pitch;
 ```
 
 Open `src/ship/ship.js`. Assisted mode only applies stored pitch once safely
@@ -239,8 +250,8 @@ freeAttitude = !this.landed && alt > 60;
 this.assistPitch = (this.assistPitch || 0) + (controls.pitch || 0) * ASSIST_PITCH_RATE * torqueMul * dt;
 ```
 
-If the buttons feel backwards in a phone test, flip the subtraction in
-`keyPitch`. Do not solve it by rotating the camera.
+If the right stick feels backwards in a phone test, flip the Y sign in
+`joystickShipAttitude()`. Do not solve it by rotating the camera.
 
 ### 3. Keep `W` / `S` As Nose Thrust
 
@@ -278,15 +289,8 @@ _shipCamFwd.set(0, 0, 1).applyQuaternion(ship.quaternion);
 _cm.lookAt(camPos, _shipCamTarget, _shipCamViewUp);
 ```
 
-BANK, NOSE, analog, W/S, and A/D should never directly orbit this camera. They
-change the ship; the camera follows.
-
-Option B: camera is independent unless the player moves camera.
-
-This was the old Codex-style camera lock. It can make the ship turn under the
-camera, which some people like for editor mode, but it made the vehicle feel
-like it had no front. Do not restore it for normal piloting unless Jaron asks
-for a separate editor/free-camera mode.
+BANK, right ATTITUDE stick, left fly stick, W/S, and A/D should never directly
+orbit this camera. They change the ship; the camera follows.
 
 For the desired "space/flying game" feel, start with Option A. If that feels too
 spinny, add smoothing:
