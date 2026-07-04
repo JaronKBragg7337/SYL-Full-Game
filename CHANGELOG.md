@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 0.2.11 — 2026-07-04 — Calmer mobile ship piloting (Builder: Codex)
+- Reworked mobile piloting after Jaron's phone screenshots: left stick is now
+  throttle + yaw, not pitch/yaw, so takeoff no longer asks the thumbstick to
+  tip the ship while trying to fly.
+- Reduced touch-look sensitivity while piloting and added mobile takeoff assist:
+  throttling up on touch also applies vertical lift until the ship leaves the
+  ground, preventing hard-impact loops from tiny mobile input mistakes.
+- Simplified the piloting buttons: right-side ship buttons are now BRAKE + GEAR,
+  and the bottom Space button relabels to LIFT while piloting.
+
 ## 0.2.10 — 2026-07-04 — Touch analog ship steering (Builder: Codex)
 - Checked `SpaceYouLand` and carried over the key pilot-control lesson: ship
   steering must be separate from camera look while seated.

@@ -152,9 +152,9 @@ console.log('\n== 3. Controls and local playability ==');
   const shipStick = joystickShipControls(radius, -radius, radius);
   check('touch joystick exposes normalized axes', right.x > 0.99 && up.y < -0.99);
   check('touch joystick still maps to WASD on foot', move.forward && !move.back);
-  check('touch joystick maps to ship yaw + pitch while piloting',
-    shipStick.yaw > 0.65 && shipStick.pitch < -0.65,
-    `yaw=${shipStick.yaw.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
+  check('touch joystick maps to calm ship yaw + throttle while piloting',
+    shipStick.yaw > 0.45 && shipStick.throttle > 0.65 && shipStick.pitch === 0,
+    `yaw=${shipStick.yaw.toFixed(2)} throttle=${shipStick.throttle.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
 }
 {
   const player = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);

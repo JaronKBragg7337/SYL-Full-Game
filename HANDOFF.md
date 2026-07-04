@@ -16,6 +16,30 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Calmer mobile ship piloting
+
+**State:** working on `main` after Jaron's real-phone screenshots showed the
+first analog steering pass was still too aircraft-like and easy to crash.
+
+**Shipped:** mobile piloting now treats the left stick as throttle + yaw
+instead of pitch + yaw. The large bottom button relabels to LIFT, right-side
+ship buttons are reduced to BRAKE + GEAR, touch-look sensitivity is lower while
+piloting, and touch throttle-up applies vertical lift during takeoff so the ship
+doesn't scrape into hard-impact damage loops. Docs/changelog updated.
+
+**Verified:** run `npm test` and browser/touch smoke before public sync.
+
+**Next up:** Jaron should retest on phone: board, hold stick upward, tap/hold
+LIFT if needed, use left/right stick to turn. After feel is acceptable, bring a
+lightweight code-built Fortis walkable gunship visual into the web game.
+
+**Gotchas:** `SpaceYouLand/_authoring/make_walkable_gunship.py` is the richer
+Unreal Fortis gunship. For the web route, port it as simplified Three.js
+geometry first; avoid shipping raw FBX/Blender payload until mobile perf is
+measured.
+
+---
+
 ## 2026-07-04 — Codex — Touch analog ship steering
 
 **State:** working on `main`. This is the direct follow-up to Jaron's report
