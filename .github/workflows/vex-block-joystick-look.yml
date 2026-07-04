@@ -1,4 +1,4 @@
-name: Vex block joystick look overlap
+name: Vex restore mobile chase follow
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   apply:
-    if: contains(github.event.head_commit.message, 'Add one-time block joystick look patch runner')
+    if: contains(github.event.head_commit.message, 'Add one-time restore mobile chase follow patch runner')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Apply joystick-look overlap patch
+      - name: Restore mobile chase follow
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -32,10 +32,10 @@ jobs:
           main_path = Path('src/main.js')
           main = main_path.read_text()
 
-          old = """      const looking = input.touchMode\n        ? input.touchLookActive\n        : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);"""
-          new = """      const looking = input.touchMode\n        ? (input.touchLookActive && !input.touchJoystickActive)\n        : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);"""
+          old = """      if (!shipCamBaseReady) {\n        shipCamBaseQuat.copy(ship.quaternion);\n        shipCamBaseReady = true;\n      } else if (!input.touchMode) {\n        shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));\n      }"""
+          new = """      if (!shipCamBaseReady) {\n        shipCamBaseQuat.copy(ship.quaternion);\n        shipCamBaseReady = true;\n      } else {\n        shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));\n      }"""
           if old not in main:
-            raise SystemExit('main.js looking block did not match expected text')
+            raise SystemExit('main.js mobile chase follow block did not match expected text')
           main = main.replace(old, new, 1)
           main_path.write_text(main)
 
@@ -59,7 +59,7 @@ jobs:
             echo "No patch changes to commit."
             exit 0
           fi
-          git commit -m "Block joystick touches from ship camera look"
+          git commit -m "Restore mobile chase follow while blocking joystick look"
           git push origin HEAD:main
 
-# trigger: block joystick-look overlap
+# trigger: restore mobile chase follow
