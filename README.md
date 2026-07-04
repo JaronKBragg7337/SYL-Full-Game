@@ -26,6 +26,12 @@ KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
 playtesting new items, bodies, ship slots, and inventory crafting. It is not
 pushed to main and is not deployed to heartbeatobservatory.com/games/syl.
 
+**SYL test lane multiplayer:** the unlisted Heartbeat route
+`/games/syl-test/` includes the current multiplayer visibility MVP. Players
+with the same direct URL can see each other's suit/ship markers through
+Heartbeat Realtime. The public stable `/games/syl/` remains the conservative
+build until Jaron approves promotion.
+
 ## The loop that exists right now
 
 You spawn on **Earth** at the **Fortis Outpost**. Your gunship on the pad is damaged:

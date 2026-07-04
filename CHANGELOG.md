@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## 0.2.6-test — 2026-07-04 — Heartbeat realtime multiplayer MVP (Builder: Codex)
+- Added optional Supabase Realtime multiplayer in `src/multiplayer/` using the
+  existing Heartbeat Observatory realtime pattern: presence for join/leave
+  identity, broadcast state at <=10Hz, idle suppression, 250ms interpolation,
+  and graceful solo fallback when realtime is unavailable.
+- Remote players now render as suit avatars on foot and ship markers while
+  piloting; state includes body/world position, orientation, mode, throttle,
+  and landed status without changing traversal, floating origin, physics, or
+  save format.
+- Added a compact realtime HUD chip and copied the test-branch source into the
+  Heartbeat `/games/syl-test/` hosted lane. Stable `/games/syl/` is unchanged.
+- Verified `npm test` remains 55/55.
+
 ## 0.2.5-test — 2026-07-04 — Kimi expansion local playtest branch (Builder: Codex)
 - Created local branch `test/kimi-expansion-pack` for Jaron playtesting only;
   main/live heartbeat deployment were not touched.

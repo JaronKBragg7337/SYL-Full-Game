@@ -16,6 +16,35 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Heartbeat realtime multiplayer MVP on SYL test lane
+
+**State:** working on `test/kimi-expansion-pack`. Multiplayer source is local
+to the test branch and copied into Heartbeat's unlisted `/games/syl-test/`
+lane. Public stable `/games/syl/` is intentionally untouched.
+
+**Shipped:** added `src/multiplayer/multiplayer.js`, a Heartbeat Supabase
+Realtime adapter that follows the existing Observatory multiplayer law:
+presence for identity only, movement as broadcast state at <=10Hz, idle
+suppression, 250ms remote interpolation, and solo fallback if realtime fails.
+Remote players render as suit avatars on foot and simple ship markers while
+piloting. Added the compact realtime chip to the page CSS.
+
+**Verified:** `npm test` = 55/55 after wiring. Browser/live verification is
+handled from the Heartbeat repo after copying this test source into
+`games/syl-test/`.
+
+**Next up:** two-browser or two-phone playtest at
+`https://www.heartbeatobservatory.com/games/syl-test/`: both players should see
+the realtime chip, see each other at the Fortis spawn, and see the remote marker
+switch to a ship once one boards/takes off.
+
+**Gotchas:** this is peer-visible/client-broadcast multiplayer, not an
+authoritative PVP server. It deliberately does not change save format,
+floating-origin math, traversal, or ship physics. Keep full combat/persistence
+authority for a later Milestone 5/official-engine pass.
+
+---
+
 ## 2026-07-04 — Codex — Kimi expansion local playtest branch
 
 **State:** working locally on `test/kimi-expansion-pack`. Not pushed to main,

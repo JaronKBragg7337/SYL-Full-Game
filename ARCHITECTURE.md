@@ -73,3 +73,13 @@ count actually hurts (see fable-survival's Vite setup for the pattern then).
 Composed from each system's own serialize()/deserialize(). Versioned (v1).
 localStorage today; a cloud backend is a transport swap, not a redesign
 (fable-survival's Supabase lane is the reference implementation).
+
+## Multiplayer MVP — `src/multiplayer/multiplayer.js`
+The browser test lane uses the existing Heartbeat Observatory Supabase Realtime
+pattern, not a new websocket stack. Presence is identity/join/leave only; live
+positions are low-rate broadcast packets with idle suppression and a 250ms
+interpolation buffer. The adapter renders remote avatars/ship markers as
+floating-origin tracked world objects, so it never stores authoritative gameplay
+position in mesh coordinates and never touches traversal, physics, inventory, or
+localStorage saves. If the realtime backend is unavailable, the adapter leaves
+the game in normal solo mode.

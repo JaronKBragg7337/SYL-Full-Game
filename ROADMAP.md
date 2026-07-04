@@ -82,6 +82,9 @@ de-risk the official build.
       (fable-survival api/save.js + Supabase is the working reference; the
       heartbeat-observatory site already runs Supabase — consider sharing it)
 - [ ] Account linking (player-code pattern from fable-survival)
+- [x] Multiplayer visibility MVP on the Heartbeat test lane: remote players and
+      ship markers over Heartbeat Supabase Realtime, with no save/physics
+      changes (2026-07-04). This is playtest presence, not authoritative PVP.
 - [ ] Multiplayer research spike: authoritative server for f64 world state,
       client prediction for integrators — WRITE FINDINGS BEFORE CODE
 - [ ] Server-authoritative world sim prototype (the persistent-galaxy seed)
