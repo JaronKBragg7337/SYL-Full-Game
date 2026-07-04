@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 0.2.12 — 2026-07-04 — Mobile flight changes actual travel direction (Builder: Codex)
+- Added a mobile flight-assist path in `ship.js`: touch piloting now steers the
+  ship's real travel heading directly, keeps the hull upright relative to the
+  current body, and applies main thrust along that heading instead of letting
+  camera pitch/inertia make the ship feel like it is on a vertical rail.
+- Desktop flight remains the more aircraft-like 6DOF path.
+
 ## 0.2.11 — 2026-07-04 — Calmer mobile ship piloting (Builder: Codex)
 - Reworked mobile piloting after Jaron's phone screenshots: left stick is now
   throttle + yaw, not pitch/yaw, so takeoff no longer asks the thumbstick to

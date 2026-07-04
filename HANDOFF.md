@@ -16,6 +16,30 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Mobile ship heading assist
+
+**State:** working on `main` after Jaron reported the calmer controls still
+felt like the ship was moving on a fixed vertical line: left/right changed the
+view but not the actual travel direction enough.
+
+**Shipped:** added `controls.mobileAssist` and a touch-only flight path in
+`src/ship/ship.js`. Mobile piloting now yaws the actual travel heading directly,
+levels the hull to the current body's up vector, and applies main thrust along
+that flat heading. LIFT remains vertical/radial. Desktop keeps the existing 6DOF
+inertial controls.
+
+**Verified:** run `npm test`, syntax checks, and public touch smoke before push.
+
+**Next up:** Jaron should retest phone flight specifically: hold stick up to
+build throttle, then move stick left/right and confirm the ship's path curves
+instead of only the camera view changing.
+
+**Gotchas:** this is intentionally "assisted mobile flight," not full 6DOF. The
+goal is phone free-roam first; advanced aircraft/space controls can come later
+behind a mode toggle.
+
+---
+
 ## 2026-07-04 — Codex — Calmer mobile ship piloting
 
 **State:** working on `main` after Jaron's real-phone screenshots showed the

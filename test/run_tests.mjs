@@ -331,6 +331,26 @@ console.log('\n== 8. Turning (yaw authority) ==');
   check('yaw settles when input released (damping works)', t.angVel.length() < 0.05,
     `angVel=${t.angVel.length().toFixed(3)}`);
 }
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.throttle = 1;
+  t.fuel = 100;
+  t.stats.ready = true;
+  t.stats.thrust = Math.max(t.stats.mass * 25, t.stats.thrust);
+  const ctl = { pitch: 0, yaw: 1, roll: 0, thrustUp: false, brake: false, mobileAssist: true };
+  const dt = 1 / 60;
+  const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  for (let i = 0; i < 90; i++) t.tick(dt, true, ctl);
+  const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  check('mobile assist yaw changes real ship heading', startFwd.dot(endFwd) < 0.2,
+    `dot=${startFwd.dot(endFwd).toFixed(2)}`);
+  check('mobile assist main thrust creates horizontal travel', Math.abs(t.velocity.z) + Math.abs(t.velocity.x) > 5,
+    `velocity=${t.velocity.toArray().map(v => v.toFixed(1)).join(',')}`);
+}
 
 console.log('\n== 9. Dev editor tools ==');
 {
