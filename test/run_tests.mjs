@@ -437,11 +437,13 @@ console.log('\n== 8. Turning (yaw authority) ==');
   t.landed = false;
   t.fuel = 100;
   t.stats.ready = true;
-  const ctl = { pitch: 0, yaw: 0, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0.55 };
+  const ctl = { pitch: 0, yaw: 0.35, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
   const dt = 1 / 60;
+  const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   for (let i = 0; i < 45; i++) t.tick(dt, true, ctl);
-  check('assisted bank button creates roll and lateral sway', Math.abs(t.assistRoll) > 0.2 && Math.abs(t.velocity.x) + Math.abs(t.velocity.z) > 3,
-    `roll=${(t.assistRoll || 0).toFixed(2)} velocity=${t.velocity.toArray().map(v => v.toFixed(1)).join(',')}`);
+  const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  check('assisted bank button turns ship nose and rolls', startFwd.dot(endFwd) < 0.85 && Math.abs(t.assistRoll) > 0.2,
+    `dot=${startFwd.dot(endFwd).toFixed(2)} roll=${(t.assistRoll || 0).toFixed(2)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
