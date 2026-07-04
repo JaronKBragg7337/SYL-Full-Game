@@ -16,6 +16,36 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 (later) — Claude (Opus, Cowork) — Ship turning fix on test lane
+
+**State:** working on `test/kimi-expansion-pack`. `npm test` 57/57. Turning fix
+is test-lane only; stable `/games/syl/` untouched; save format unchanged.
+
+**Shipped:** flight-turn feel fix. Yaw was the weak axis (mouse-X only, low
+authority, heavy damping) and on phone a look-drag could not HOLD a turn.
+- ship.js: rotation now uses tunable PITCH_RATE/YAW_RATE/ROLL_RATE/ROT_DAMP
+  consts (yaw 1.8->2.7, damping 3.0->2.2) — feel-tuning is now a one-line edit.
+- main.js readShipControls: yaw = mouse-X + A/D keys; roll moved Q/A -> Q/E.
+- touch.js: added on-screen "TURN left / TURN right" hold-buttons to the
+  piloting cluster so phones can hold a sustained turn.
+- README + in-game help updated to the new control scheme.
+- test/run_tests.mjs: +2 tests (sustained yaw turns the ship; yaw settles on
+  release). 55 -> 57.
+
+**Verified:** `npm test` 57/57; `node --check` on all changed files; live
+test-lane browser check after the Heartbeat sync deploy. Jaron phone feel-test
+pending.
+
+**Next up:** Jaron feel-tests turning on /games/syl-test/. If good: (a) mirror
+this fix to `main` + promote the Kimi expansion, and (b) apply the same A/D-yaw
++ touch-turn pattern to Fable vehicle steering (cross-game parity).
+
+**Gotchas:** A/D now YAW in the cockpit (they still strafe on foot — mode-scoped,
+same as W/S). Roll is Q/E. The live test lane is a COPY inside the
+heartbeat-observatory repo (games/syl-test/), so this fix only reaches phones
+after that repo is synced and Vercel redeploys — pushing the game repo alone is
+not enough.
+
 ## 2026-07-04 — Codex — Heartbeat realtime multiplayer MVP on SYL test lane
 
 **State:** working on `test/kimi-expansion-pack`. Multiplayer source is local

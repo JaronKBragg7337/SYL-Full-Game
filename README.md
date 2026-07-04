@@ -57,7 +57,7 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 ## Controls
 
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
-Ship: **W/S** throttle · **mouse** pitch/yaw · **Q/A** roll · **Space** vertical thrust ·
+Ship: **W/S** throttle · **mouse** pitch/yaw · **A/D** turn · **Q/E** roll · **Space** vertical thrust ·
 **X** brake · **G** gear · **C** camera · **E** exit (landed)
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load

@@ -294,6 +294,30 @@ console.log('\n== 7. Crafting ==');
     madeFuel.msg);
 }
 
+console.log('\n== 8. Turning (yaw authority) ==');
+{
+  const t = new Ship(stubEngine, BODIES);
+  // Deep space so it won't clamp to ground or auto-settle upright.
+  t.worldPos.set(200000, 0, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.angVel.set(0, 0, 0);
+  t.landed = false;
+  t.throttle = 0;
+  const fwd0 = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  const ctl = { pitch: 0, yaw: 1, roll: 0, thrustUp: false, brake: false };
+  const dt = 1 / 60;
+  for (let i = 0; i < 60; i++) t.tick(dt, true, ctl); // 1 s of full yaw
+  const fwd1 = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  const turned = Math.acos(Math.max(-1, Math.min(1, fwd0.dot(fwd1))));
+  check('sustained yaw input turns the ship a usable amount', turned > 0.5,
+    `heading changed ${(turned * 180 / Math.PI).toFixed(0)} deg in 1s`);
+  ctl.yaw = 0;
+  for (let i = 0; i < 120; i++) t.tick(dt, true, ctl); // release
+  check('yaw settles when input released (damping works)', t.angVel.length() < 0.05,
+    `angVel=${t.angVel.length().toFixed(3)}`);
+}
+
 console.log(`\n========================================`);
 console.log(`RESULT: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.2.7-test — 2026-07-04 — Ship turning/flight-feel fix (Builder: Claude/Opus)
+- Yaw is now a first-class, holdable control: `A`/`D` turn the ship (in addition
+  to mouse-X), roll moved to `Q`/`E`, and the phone piloting cluster gains
+  "TURN left / TURN right" hold-buttons so touch players can hold a turn.
+- ship.js rotation exposed as tunable consts (PITCH_RATE/YAW_RATE/ROLL_RATE/
+  ROT_DAMP); yaw authority 1.8->2.7 and damping 3.0->2.2 for crisper, sustained
+  turns. No change to floating origin, traversal, collision, or save format.
+- README + in-game help updated. +2 turning tests. `npm test` 55 -> 57.
+
 ## 0.2.6-test — 2026-07-04 — Heartbeat realtime multiplayer MVP (Builder: Codex)
 - Added optional Supabase Realtime multiplayer in `src/multiplayer/` using the
   existing Heartbeat Observatory realtime pattern: presence for join/leave
