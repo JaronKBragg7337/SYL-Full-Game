@@ -1,0 +1,85 @@
+name: Vex apply ship controls camera patch
+
+on:
+  push:
+    branches:
+      - vex/ship-controls-camera
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: contains(github.event.head_commit.message, 'Add one-time ship controls patch runner')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: vex/ship-controls-camera
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Apply controls/camera patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          main_path = Path('src/main.js')
+          main = main_path.read_text()
+
+          old_camera = """      if (looking) {\n        shipTouchCamYaw -= input.mouseDX * 0.003;\n        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));\n      } else {\n        shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);\n        shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);\n      }"""
+          new_camera = """      const arrowYaw = (input.down('ArrowRight') ? 1 : 0) - (input.down('ArrowLeft') ? 1 : 0);\n      const arrowPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);\n      const arrowLooking = arrowYaw !== 0 || arrowPitch !== 0;\n\n      if (looking) {\n        shipTouchCamYaw -= input.mouseDX * 0.003;\n        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));\n      }\n\n      if (arrowLooking) {\n        shipTouchCamYaw += arrowYaw * 1.8 * dt;\n        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));\n      }\n\n      if (!looking && !arrowLooking) {\n        shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);\n        shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);\n      }"""
+          if old_camera not in main:
+            raise SystemExit('main.js camera block did not match expected text')
+          main = main.replace(old_camera, new_camera, 1)
+
+          old_controls = """  const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);\n  controls.pitch = 0;\n  controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;\n  controls.roll = 0;"""
+          new_controls = """  const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);\n  const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);\n\n  controls.pitch = 0;\n  controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;\n  controls.roll = input.touchMode ? 0 : keyRoll;"""
+          if old_controls not in main:
+            raise SystemExit('main.js controls block did not match expected text')
+          main = main.replace(old_controls, new_controls, 1)
+          main_path.write_text(main)
+
+          ship_path = Path('src/ship/ship.js')
+          ship = ship_path.read_text()
+
+          old_field = """    this.gearDown = true;\n    this.throttle = 0;      // 0..1 main thrust setting\n\n    this.stats = this.computeStats();"""
+          new_field = """    this.gearDown = true;\n    this.throttle = 0;      // 0..1 main thrust setting\n    this.assistRoll = 0;    // assisted-mode bank angle; upright rebuild would otherwise erase Q/R roll\n\n    this.stats = this.computeStats();"""
+          if old_field not in ship:
+            raise SystemExit('ship.js assistRoll field location did not match expected text')
+          ship = ship.replace(old_field, new_field, 1)
+
+          old_assist = """      _mobileRight.crossVectors(up, fwdFlat).normalize();\n      _mobileMatrix.makeBasis(_mobileRight, up, fwdFlat);\n      this.quaternion.setFromRotationMatrix(_mobileMatrix);\n      this.angVel.set(0, 0, 0);"""
+          new_assist = """      _mobileRight.crossVectors(up, fwdFlat).normalize();\n      _mobileMatrix.makeBasis(_mobileRight, up, fwdFlat);\n      this.quaternion.setFromRotationMatrix(_mobileMatrix);\n\n      // Assisted mode keeps the ship planet-upright for phone-friendly flying,\n      // so Q/R roll needs a stored bank angle applied after the upright basis rebuild.\n      this.assistRoll = (this.assistRoll || 0) + (controls.roll || 0) * ROLL_RATE * dt;\n      this.assistRoll *= Math.max(0, 1 - 1.5 * dt);\n      if (Math.abs(this.assistRoll) > 0.001) {\n        _q.setFromAxisAngle(fwdFlat, this.assistRoll);\n        this.quaternion.premultiply(_q).normalize();\n      }\n\n      this.angVel.set(0, 0, 0);"""
+          if old_assist not in ship:
+            raise SystemExit('ship.js assisted quaternion block did not match expected text')
+          ship = ship.replace(old_assist, new_assist, 1)
+          ship_path.write_text(ship)
+
+          workflow = Path('.github/workflows/vex-ship-controls-camera.yml')
+          if workflow.exists():
+            workflow.unlink()
+          PY
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Commit patched code
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.js src/ship/ship.js .github/workflows/vex-ship-controls-camera.yml
+          if git diff --cached --quiet; then
+            echo "No patch changes to commit."
+            exit 0
+          fi
+          git commit -m "Wire ship roll and camera orbit controls"
+          git push origin HEAD:vex/ship-controls-camera
