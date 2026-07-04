@@ -104,6 +104,8 @@ Manual pass: see HANDOFF.md → "How to verify".
 
 `VISION.md` (what SYL is) · `ARCHITECTURE.md` (why it's built this way) ·
 `AGENTS.md` + `CLAUDE.md` (how agents work here) · `HANDOFF.md` (session log) ·
-`ROADMAP.md` (what's next) · `DEV_GOD_MODE_ROADMAP.md` (dev tools, prefabs,
-snap builder, walk-in vehicles) · `DECISIONS.md` (real vs approximated — read
-this) · `PORTABILITY.md` (moving/deploying/live-site sync) · `CHANGELOG.md`.
+`ROADMAP.md` (what's next) · `CONTROLS_CAMERA_VEHICLES_GUIDE.md` (where to wire
+ship controls/camera/vehicle behavior) · `DEV_GOD_MODE_ROADMAP.md` (dev tools,
+prefabs, snap builder, walk-in vehicles) · `DECISIONS.md` (real vs approximated
+— read this) · `PORTABILITY.md` (moving/deploying/live-site sync) ·
+`CHANGELOG.md`.

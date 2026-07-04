@@ -27,7 +27,8 @@ de-risk the official build.
 
 ## Milestone 1 — Feel & robustness (make what exists feel good)
 - [ ] Flight-feel tuning pass with Jaron (thrust curves, rotation rates, camera
-      distances; expose tunables as a constants block in ship.js)
+      distances; expose tunables as a constants block in ship.js). Control and
+      camera wiring notes live in `CONTROLS_CAMERA_VEHICLES_GUIDE.md`.
 - [ ] Landing aids: velocity vector indicator, ground-radar altitude, target-zone
       marker while approaching (HUD additions in ui.js)
 - [x] On-foot collision with structures (capsule vs placed-structure primitives —

@@ -16,6 +16,30 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Controls/camera/vehicles wiring guide added
+
+**State:** Jaron wants to personally inspect and wire the control/camera/vehicle
+behavior because several agent attempts still felt wrong.
+
+**Shipped:** added `CONTROLS_CAMERA_VEHICLES_GUIDE.md`, linked from `README.md`
+and `ROADMAP.md`. It maps the important files (`engine.js`, `touch.js`,
+`main.js`, `ship.js`), explains the current control pipeline, and gives code
+shapes for Jaron's target mapping: W/S thrust, A/D ship yaw, Space lift, Q/R
+roll, arrows/mouse camera-only.
+
+**Verified:** docs-only change; rebased on top of Claude/Fable root-cause
+physics/camera/collision commit.
+
+**Next up:** if Jaron wants the repo changed to that exact map, implement from
+the guide in this order: `readShipControls()`, `updateCamera()`, then assisted
+roll handling in `ship.tick()`.
+
+**Gotchas:** Claude's root-cause fixes are now on `origin/main` and this guide
+was rebased on top of them. Do not restore the old chase-camera steering hold
+or early-return assisted flight path.
+
+---
+
 ## 2026-07-04 — Claude (Fable 5, Cowork) — ROOT-CAUSE FIXES: ship physics, chase camera, mesh-true terrain collision, solid ship hull
 
 **State:** working — `npm test` 79/79. Jaron does the live feel test (his request).
