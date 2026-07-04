@@ -16,6 +16,68 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Claude (Fable 5, Cowork) — ROOT-CAUSE FIXES: ship physics, chase camera, mesh-true terrain collision, solid ship hull
+
+**State:** working — `npm test` 79/79. Jaron does the live feel test (his request).
+
+**What was actually wrong (why control patches kept failing):**
+1. `ship.js` assisted flight **`return`ed before gravity and ground collision ever
+   ran**. That single early-return caused: fly-through-terrain, "gravity feels
+   off", ship never falling, and no landing during assisted flight. Every
+   control patch on top of it was fighting this.
+2. `main.js` chase camera **held its orientation while steering** (the July 4
+   "steering lock"). Standard flying games do the OPPOSITE: the camera follows
+   the ship, so steering visibly turns the world. With the lock, A/D turned the
+   hull under a frozen camera — "the ship acts like it doesn't have a front."
+3. **Collision and the rendered mesh were two different surfaces.** Collision
+   sampled the exact fbm function; the mesh is a linear interpolation of it
+   across ~150 m triangles. On rugged terrain they disagreed by many meters:
+   players stood on air, sank under the grass, saw through the planet from
+   inside ("the ball" = the water/atmo shells seen from under the terrain mesh),
+   and crates floated. NOT a rendering bug — a two-surfaces bug.
+4. The ship was a ghost to the on-foot player (no hull collision at all).
+
+**Shipped:**
+- `src/ship/ship.js` — assisted mode now only sets orientation + thrust accel;
+  gravity, integration, structure collision, and ground collision run for EVERY
+  mode, always. Idle damping split: tangential eases (~1.5 s), vertical falls
+  under real gravity to a ~8 m/s terminal = safe hands-off auto-landing. Added
+  ASSIST_GRIP: velocity swings to follow the nose, so turning turns your path.
+  Yaw sign fixed so D / stick-right turns RIGHT under the fixed camera.
+- `src/main.js` — chase camera follows ship orientation (slerp 10/s), look-drag
+  is a temporary orbit offset that eases back. Steering hold REMOVED — never
+  re-add it (comment in code). Player gets `shipRef` for hull collision.
+- `src/world/planet.js` — MESH-TRUE COLLISION: `buildBodyVisual` stores each
+  body's exact vertex-radius grid (`body._terrainGrid`); `terrainRadiusAt` now
+  ray-intersects the SAME triangle the GPU draws (three.js SphereGeometry
+  param + b–d diagonal split). Collision == picture to float precision. Raw
+  analytic function still exported as `analyticTerrainRadiusAt` (build-time).
+  Mesh detail bumped (96/64/48) — better looks AND smaller triangles.
+- `src/player/player.js` — `_collideWithShip`: oriented-box hull blocker;
+  player can't walk through the ship and CAN stand/walk on the roof.
+- `test/run_tests.mjs` — 7 new regression tests (8b section): assisted gravity,
+  assisted terrain clamp, collision==mesh at 500 vertices, continuity, player
+  high-speed fall-through, ship-hull solidity. Two old tests updated — they
+  asserted the no-gravity bug as correct behavior.
+
+**Verified:** `npm test` 79/79; node --check all edited files; live md5 sync to
+heartbeat-observatory /games/syl (see that repo's commit).
+
+**Next up:** Jaron's phone/desktop feel test. Then: "cine"-style multiplayer is
+NOT in this lane; next code steps per DEV_GOD_MODE_ROADMAP.md (walk-in ship
+interior benefits from the new hull collider — the roof/deck standing logic is
+the seed for interior floors).
+
+**Gotchas:**
+- CLAUDE.md law updated in spirit: `terrainRadiusAt()` is still the single
+  ground truth, but it is now MESH-TRUE (grid interpolation). If you add
+  terrain LOD, collision must sample whatever the player currently sees.
+- Do NOT re-add a chase-camera steering hold, and do NOT put an early `return`
+  in `Ship.tick` before the shared physics block.
+- The two updated tests were not weakened — they encoded the bug.
+
+---
+
 ## 2026-07-04 — Codex — Dev/God Mode roadmap captured
 
 **State:** Jaron asked for the dev/god mode, prefabs, snap builder, walk-in

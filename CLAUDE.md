@@ -17,6 +17,9 @@ Owner: Jaron. You are his building partner. He tests feel; you build, verify, lo
   floating-origin sync in engine.js. Never bypass it.
 - Ground truth for terrain is `terrainRadiusAt()` in planet.js. All collision
   and all visuals derive from it. Never add a second height source.
+  (Since 2026-07-04 it is MESH-TRUE: it interpolates the rendered mesh's own
+  vertex grid, so collision equals the picture exactly. Terrain LOD must keep
+  collision sampling whatever the player currently sees.)
 - No physics library. Player and ship integrate their own motion (see
   ARCHITECTURE.md for the measured evidence behind this).
 - Data-driven registries (bodies, factions, parts, items). Content changes are

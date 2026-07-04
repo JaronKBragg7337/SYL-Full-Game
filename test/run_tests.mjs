@@ -355,10 +355,16 @@ console.log('\n== 8. Turning (yaw authority) ==');
     `dot=${startFwd.dot(endFwd).toFixed(2)}`);
   check('mobile assist main thrust creates horizontal travel', Math.abs(t.velocity.z) + Math.abs(t.velocity.x) > 5,
     `velocity=${t.velocity.toArray().map(v => v.toFixed(1)).join(',')}`);
-  ctl.yaw = 0; ctl.thrustUp = false; t.throttle = 0;
-  for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
-  check('mobile assist steadies when controls released', t.velocity.length() < 1.2,
-    `speed=${t.velocity.length().toFixed(2)}`);
+  ctl.yaw = 0; ctl.thrustUp = false; t.throttle = 0; ctl.mobileAssist = true;
+  const altBefore = altitudeAt(earth, t.worldPos);
+  for (let i = 0; i < 120; i++) t.tick(dt, true, ctl);
+  const upDir = upAt(earth, t.worldPos, new THREE.Vector3());
+  const vTan = t.velocity.clone().addScaledVector(upDir, -t.velocity.dot(upDir));
+  const altAfter = altitudeAt(earth, t.worldPos);
+  check('mobile assist steadies tangential motion when released', vTan.length() < 1.5,
+    `tanSpeed=${vTan.length().toFixed(2)}`);
+  check('assisted flight is subject to REAL gravity (idle ship sinks)', altAfter < altBefore - 0.5,
+    `alt ${altBefore.toFixed(1)} -> ${altAfter.toFixed(1)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
@@ -374,9 +380,11 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
   const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  const upD = upAt(earth, t.worldPos, new THREE.Vector3());
+  const tanV = t.velocity.clone().addScaledVector(upD, -t.velocity.dot(upD));
   check('assisted yaw turns ship nose without inventing sideways travel',
-    startFwd.dot(endFwd) < 0.2 && t.velocity.length() < 0.5,
-    `dot=${startFwd.dot(endFwd).toFixed(2)} speed=${t.velocity.length().toFixed(2)}`);
+    startFwd.dot(endFwd) < 0.2 && tanV.length() < 0.5,
+    `dot=${startFwd.dot(endFwd).toFixed(2)} tanSpeed=${tanV.length().toFixed(2)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
@@ -408,6 +416,87 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const outside = Math.abs(en.east - 40) >= 12.75 || Math.abs(en.north) >= 10.75;
   check('ship hull collides with authored structures', outside,
     `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
+}
+
+console.log('\n== 8b. 2026-07-04 root-cause regressions ==');
+{
+  // Assisted flight can never pass below terrain (the old assist branch
+  // returned before ground collision — ships flew through planets).
+  const t = new Ship(stubEngine, BODIES);
+  const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
+  const start = zoneWorldPos(earth, zone, 40);
+  t.placeAt(start, upAt(earth, start));
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const upD = upAt(earth, t.worldPos, new THREE.Vector3());
+  t.velocity.copy(upD).multiplyScalar(-60); // diving hard
+  const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: 1 };
+  let minAlt = Infinity;
+  for (let i = 0; i < 240; i++) {
+    t.tick(1 / 60, true, ctl);
+    minAlt = Math.min(minAlt, altitudeAt(earth, t.worldPos));
+  }
+  check('assisted flight clamps at the terrain, never through it', minAlt > -1.0,
+    `minAlt=${minAlt.toFixed(2)}`);
+}
+{
+  // Collision surface === rendered surface: every mesh vertex radius must
+  // equal terrainRadiusAt along that vertex direction (mesh-true collision).
+  const g = earth._terrainGrid;
+  check('terrain collision grid exists after buildBodyVisual', !!g, g ? `${g.W}x${g.H}` : 'missing');
+  let maxErr = 0;
+  const dir = new THREE.Vector3();
+  for (let k = 0; k < 500; k++) {
+    const iy = 1 + Math.floor(Math.random() * (g.H - 2));
+    const ix = Math.floor(Math.random() * g.W);
+    const theta = (iy / g.H) * Math.PI, phi = (ix / g.W) * Math.PI * 2;
+    dir.set(-Math.cos(phi) * Math.sin(theta), Math.cos(theta), Math.sin(phi) * Math.sin(theta)).normalize();
+    const err = Math.abs(terrainRadiusAt(earth, dir) - g.radii[iy * (g.W + 1) + ix]);
+    maxErr = Math.max(maxErr, err);
+  }
+  check('collision equals the rendered mesh at every vertex', maxErr < 1e-6, `maxErr=${maxErr}`);
+  // And between vertices it must be continuous (no cliffs from cell logic).
+  let maxJump = 0;
+  for (let k = 0; k < 300; k++) {
+    dir.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+    const r1 = terrainRadiusAt(earth, dir);
+    const dir2 = dir.clone().add(new THREE.Vector3(1e-5, 1e-5, 0)).normalize();
+    maxJump = Math.max(maxJump, Math.abs(terrainRadiusAt(earth, dir2) - r1));
+  }
+  check('collision surface is continuous (no seams)', maxJump < 0.5, `maxJump=${maxJump.toFixed(4)}`);
+}
+{
+  // Player cannot fall through terrain even at high speed.
+  const stubInput = { down: () => false, mouseDX: 0, mouseDY: 0 };
+  const pl = new Player(stubEngine, stubInput, BODIES);
+  const zone = earth.landingZones.find(z => z.id === 'earth_relay_south');
+  pl.placeAt(zoneWorldPos(earth, zone, 80));
+  const upD = upAt(earth, pl.worldPos, new THREE.Vector3());
+  pl.velocity.copy(upD).multiplyScalar(-150);
+  let minAlt = Infinity;
+  for (let i = 0; i < 180; i++) {
+    pl.tick(1 / 60, false);
+    minAlt = Math.min(minAlt, altitudeAt(earth, pl.worldPos));
+  }
+  check('player never passes below the terrain surface', minAlt > -0.5, `minAlt=${minAlt.toFixed(2)}`);
+}
+{
+  // The ship hull is solid to the player (and the roof is walkable).
+  const stubInput = { down: () => false, mouseDX: 0, mouseDY: 0 };
+  const pl = new Player(stubEngine, stubInput, BODIES);
+  const t = new Ship(stubEngine, BODIES);
+  const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
+  const shipPos = zoneWorldPos(earth, zone, 1.95);
+  t.placeAt(shipPos, upAt(earth, shipPos));
+  pl.shipRef = t;
+  // Put the player INSIDE the hull footprint.
+  pl.placeAt(shipPos.clone());
+  pl.tick(1 / 60, false);
+  const local = pl.worldPos.clone().sub(t.worldPos).applyQuaternion(t.quaternion.clone().invert());
+  const outsideOrOnTop = Math.abs(local.x) >= 2.35 || Math.abs(local.z) >= 6.4 || local.y >= 2.25;
+  check('player cannot stand inside the ship hull', outsideOrOnTop,
+    `local=${local.toArray().map(v => v.toFixed(2)).join(',')}`);
 }
 
 console.log('\n== 9. Dev editor tools ==');

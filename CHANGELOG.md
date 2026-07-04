@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+## 2026-07-04 — Root-cause physics/camera/collision repair (Claude Fable 5)
+- Assisted ship flight now obeys gravity and terrain collision (early-return bug removed) — no more flying through planets; idle ships sink to a safe auto-landing.
+- Chase camera follows the ship (steering hold removed) — the ship has a front again; D/stick-right turns right; velocity "grip" makes turns change your path.
+- MESH-TRUE terrain collision: the collision surface IS the rendered mesh (vertex-radius grid + exact ray-triangle). Fixes fall-through ground, floating/buried crates, seeing through the planet. Mesh detail bumped.
+- Ship hull is solid to the player (walk on the roof, not through the walls).
+- 7 new regression tests; 79/79 green.
+
+
 ## 0.2.19 — 2026-07-04 — Dev/God Mode roadmap captured in repo (Builder: Codex)
 - Added `DEV_GOD_MODE_ROADMAP.md` to track the requested dev/god mode,
   placeable prefabs, snap builder, walk-in vehicles, and asset pipeline lane.
