@@ -444,6 +444,8 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   check('assisted bank button turns ship nose and rolls', startFwd.dot(endFwd) < 0.85 && Math.abs(t.assistRoll) > 0.2,
     `dot=${startFwd.dot(endFwd).toFixed(2)} roll=${(t.assistRoll || 0).toFixed(2)}`);
+  check('local ship visual is wired to authoritative rotation', t._trackEntry.quaternion === t.quaternion,
+    'track entry missing ship quaternion');
 }
 {
   const t = new Ship(stubEngine, BODIES);
