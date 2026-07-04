@@ -437,13 +437,54 @@ console.log('\n== 8. Turning (yaw authority) ==');
   t.landed = false;
   t.fuel = 100;
   t.stats.ready = true;
-  const ctl = { pitch: 0, yaw: 0.35, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const ctl = { pitch: 0, yaw: 0.65, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
   const dt = 1 / 60;
   const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   for (let i = 0; i < 45; i++) t.tick(dt, true, ctl);
   const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   check('assisted bank button turns ship nose and rolls', startFwd.dot(endFwd) < 0.85 && Math.abs(t.assistRoll) > 0.2,
     `dot=${startFwd.dot(endFwd).toFixed(2)} roll=${(t.assistRoll || 0).toFixed(2)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const turn = { pitch: 0, yaw: 0.65, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const neutral = {
+    pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true,
+    assistForward: 0, assistStrafe: 0,
+    assistForwardDir: new THREE.Vector3(0, 0, -1),
+  };
+  for (let i = 0; i < 35; i++) t.tick(dt, true, turn);
+  const bankedFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  for (let i = 0; i < 35; i++) t.tick(dt, true, neutral);
+  const heldFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  check('assisted bank heading persists after release without camera basis reset', bankedFwd.dot(heldFwd) > 0.96,
+    `dot=${bankedFwd.dot(heldFwd).toFixed(2)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const nose = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  const oldCameraForward = new THREE.Vector3(0, 0, 1);
+  const ctl = {
+    pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true,
+    assistForward: 1, assistStrafe: 0,
+    assistForwardDir: oldCameraForward,
+  };
+  for (let i = 0; i < 20; i++) t.tick(dt, true, ctl);
+  const flatV = t.velocity.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -t.velocity.y);
+  check('assisted forward thrust follows ship nose, not camera forward', flatV.dot(nose) > flatV.dot(oldCameraForward) + 4,
+    `noseDot=${flatV.dot(nose).toFixed(1)} cameraDot=${flatV.dot(oldCameraForward).toFixed(1)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
