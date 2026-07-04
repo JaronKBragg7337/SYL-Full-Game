@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+## 0.2.8 — 2026-07-04 — Promote Kimi expansion + multiplayer to main (Builder: Codex)
+- Promoted the tested `test/kimi-expansion-pack` work onto `main`: expanded
+  items/bodies/ship parts/crafting, Heartbeat Realtime visibility, and the
+  A/D yaw + touch-turn flight fix are now the public SYL foundation.
+- Updated README language so the promoted features no longer read as test-only.
+- Public hosted copy should be synced into Heartbeat `/games/syl/` while keeping
+  stable saves on the `syl_save` key and future risky work on `/games/syl-test/`.
+
 ## 0.2.7-test — 2026-07-04 — Ship turning/flight-feel fix (Builder: Claude/Opus)
 - Yaw is now a first-class, holdable control: `A`/`D` turn the ship (in addition
   to mouse-X), roll moved to `Q`/`E`, and the phone piloting cluster gains

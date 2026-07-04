@@ -22,15 +22,10 @@ for the official SYL game (Unreal/Unity — see VISION.md "The official game"
 and ROADMAP Milestone 7). Target: EVE-style planet-to-planet open world,
 KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
 
-**Kimi expansion test branch:** `test/kimi-expansion-pack` is local-only for
-playtesting new items, bodies, ship slots, and inventory crafting. It is not
-pushed to main and is not deployed to heartbeatobservatory.com/games/syl.
-
-**SYL test lane multiplayer:** the unlisted Heartbeat route
-`/games/syl-test/` includes the current multiplayer visibility MVP. Players
-with the same direct URL can see each other's suit/ship markers through
-Heartbeat Realtime. The public stable `/games/syl/` remains the conservative
-build until Jaron approves promotion.
+**Promoted July 4, 2026:** the Kimi expansion content, Heartbeat Realtime
+visibility MVP, and ship turning fix are now part of `main` and the public
+`/games/syl/` route. The old `/games/syl-test/` lane can stay available as an
+unlisted preview lane for future risky changes.
 
 ## The loop that exists right now
 
@@ -48,7 +43,7 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 5. Open the body map (**M**), burn toward the **Moon** (or **Rustholm**), brake with
    **X** on approach, descend, and land gently (under ~16 m/s or you damage modules).
 6. Landing at a marked zone **discovers** it — faction contact, salvage reward, autosave.
-7. On the Kimi test branch, additional bodies/zones carry test crates with
+7. Additional bodies/zones carry test crates with
    expanded resources and ship parts.
 8. Open **I** for inventory and crafting. Crafting is intentionally simple:
    buttons are enabled only when the carried inputs are present.
@@ -65,7 +60,7 @@ Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 ## Verify it works
 
 ```
-npm test        # 55 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting
+npm test        # 57 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting, ship yaw
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 

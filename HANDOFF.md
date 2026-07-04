@@ -16,6 +16,26 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Promote SYL test branch to main
+
+**State:** `main` now contains the tested Kimi expansion, Heartbeat Realtime
+visibility MVP, and Claude's ship yaw/touch-turn fix. `test/kimi-expansion-pack`
+remains as history but is no longer the only lane with those features.
+
+**Shipped:** fast-forwarded `main` from `test/kimi-expansion-pack`; updated
+README/CHANGELOG so promoted features are documented as public-main work instead
+of test-only work.
+
+**Verified:** run `npm test` before pushing/deploying this session.
+
+**Next up:** sync the same promoted source into Heartbeat
+`/games/syl/`, keep the stable save key, then push both repos.
+
+**Gotchas:** `/games/syl-test/` should keep its path-scoped save key for future
+preview work; `/games/syl/` should keep `syl_save` so public saves stay public.
+
+---
+
 ## 2026-07-04 (later) — Claude (Opus, Cowork) — Ship turning fix on test lane
 
 **State:** working on `test/kimi-expansion-pack`. `npm test` 57/57. Turning fix
