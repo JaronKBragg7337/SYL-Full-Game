@@ -1,5 +1,12 @@
 # CHANGELOG.md
 
+## 0.2.19 — 2026-07-04 — Dev/God Mode roadmap captured in repo (Builder: Codex)
+- Added `DEV_GOD_MODE_ROADMAP.md` to track the requested dev/god mode,
+  placeable prefabs, snap builder, walk-in vehicles, and asset pipeline lane.
+- The doc marks what is done, partial, and not started so future agents can
+  continue from repo state instead of chat memory.
+- Linked the new tracker from `README.md` and `ROADMAP.md`.
+
 ## 0.2.18 — 2026-07-04 — Assisted ship flight now has a real nose/front (Builder: Codex)
 - Reworked assisted ship piloting from direct travel-vector steering to a
   vehicle-style model: yaw rotates the hull/front, and throttle accelerates

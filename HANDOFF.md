@@ -16,6 +16,27 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Dev/God Mode roadmap captured
+
+**State:** Jaron asked for the dev/god mode, prefabs, snap builder, walk-in
+vehicles, and asset pipeline list to live in the repo with a clear done/not-done
+breakdown.
+
+**Shipped:** added `DEV_GOD_MODE_ROADMAP.md` with statuses for every item in
+the list: done, partial, or not started. Linked it from `README.md` and
+`ROADMAP.md`, and added this changelog/handoff note.
+
+**Verified:** docs-only change; no runtime tests required.
+
+**Next up:** start the first implementation slice from that file: DEV body/zone
+teleport, code-built prefab catalog, placement cursor, and `placedObjects` save
+payload.
+
+**Gotchas:** current DEV tools are useful but not a placement system yet. The
+new doc is the source of truth for this lane.
+
+---
+
 ## 2026-07-04 — Codex — Assisted ship flight now uses nose-first thrust
 
 **State:** Jaron clarified the remaining issue: the ship felt like it had no

@@ -47,6 +47,9 @@ de-risk the official build.
       (NEVER a second height source) with crater/ridged noise variants per body
 - [ ] Free-form ship builder: attachment-node graph replacing fixed slots
       (reuse shipBuilder actions; keep slotIds stable for save migration)
+- [ ] Dev/God Mode + placeable prefab lane: tracked in
+      `DEV_GOD_MODE_ROADMAP.md` so admin tools, prefab placement, snap sockets,
+      walk-in vehicles, and the asset pipeline have one owned checklist.
 - [ ] Resource nodes + mining tool on-foot loop (extends items/inventory);
       this is where timed respawn belongs, not one-shot salvage crates
 - [ ] More bodies: gas-giant no-landing body, ice moon (data + one new terrain
