@@ -85,16 +85,24 @@ Current mapping in this repo:
 
 - `W`: forward throttle
 - `S`: reverse
-- `A`: yaw left
-- `D`: yaw right
+- `A`: strafe left
+- `D`: strafe right
+- `Q`: bank/turn left
+- `R`: bank/turn right
+- `ArrowUp`: nose up in high flight/free attitude
+- `ArrowDown`: nose down in high flight/free attitude
 - `Space`: thrust/lift up
+- `Z`: descend
 - `X` / Ctrl: brake
-- Touch analog: forward/reverse + yaw
+- Touch analog: forward/reverse + strafe + auto-lift while held
+- Touch BANK buttons: ship heading/roll, not camera orbit
+- Touch NOSE buttons: high-flight pitch
+- Touch DESCEND: overrides lift for landing
 
-Current missing mapping:
+Current missing gameplay verbs:
 
-- `Q` / `R` roll is not wired in assisted mode.
-- Arrow keys are not wired as ship camera controls.
+- Weapon, scanner, and shield modules are stat-accounted, but FIRE/SCAN/SHIELD
+  actions are not implemented yet.
 
 ### Ship Camera
 
@@ -112,9 +120,13 @@ Current chase behavior:
 
 - `chaseCam`: true = third-person locked chase, false = cockpit.
 - Chase camera sits behind/above the ship nose.
-- Chase camera uses current planet up as its up vector, so ship banking does
-  not roll the horizon.
-- BANK/Q/R and analog controls must never directly orbit the camera.
+- Chase camera follows the ship's real 3D nose, so pitch is visible in
+  high-flight/free-attitude mode.
+- Chase camera uses current planet up as its preferred up vector, so ship
+  banking does not roll the horizon unless the nose is nearly vertical and a
+  fallback up vector is needed.
+- BANK/Q/R, NOSE buttons, and analog controls must never directly orbit the
+  camera. They rotate/move the ship; the camera follows as a rig.
 
 This file should be the only place where ship camera behavior is changed. Ship
 physics should not read mouse input directly.
@@ -130,11 +142,14 @@ This owns what the ship actually does with the controls.
 In assisted mode, current flow is:
 
 1. `controls.yaw` rotates the ship quaternion around local planet up.
-2. Ship forward is calculated from local `+Z`.
-3. `controls.assistForward` accelerates along that forward direction.
-4. `controls.thrustUp` accelerates along planet up.
-5. Damp/brake/speed cap are applied.
-6. Position is updated.
+2. `controls.pitch` updates stored `assistPitch` once the ship is safely
+   airborne (`alt > 60` in `ship.js`).
+3. Ship forward is calculated from local `+Z`.
+4. `controls.assistForward` accelerates along flat forward near the ground and
+   along the real 3D nose in high flight.
+5. `controls.thrustUp` accelerates along planet up.
+6. Damp/brake/speed cap are applied.
+7. Position is updated.
 
 Important convention:
 
@@ -154,170 +169,117 @@ different way than physics, controls will feel wrong even if the math is right.
 The current physics says ship front is local `+Z`. Keep the cockpit glass/nose
 on the positive-Z side of the visual.
 
-## Desired Control Map From Jaron
+## Current Working Control Map From Jaron's Phone Tests
 
-This is the target behavior Jaron described:
+This is the behavior Jaron confirmed felt right, plus the high-flight pitch
+addition:
 
 - `W`: forward thrust through the ship's front/windows.
 - `S`: reverse thrust through the ship's back.
-- `A`: turn/yaw the ship left.
-  - The front/windows rotate left.
-  - The back shifts right/opposite.
-  - This is ship rotation, not camera orbit.
-- `D`: turn/yaw the ship right.
-  - The front/windows rotate right.
-  - The back shifts left/opposite.
-  - This is ship rotation, not camera orbit.
+- `A`: strafe left.
+- `D`: strafe right.
 - `Space`: thrust up.
-- `R`: roll the ship one direction.
-- `Q`: roll the ship the opposite direction.
-- Arrow keys: camera only.
-- Mouse cursor / mouse look: camera only.
-- Mobile analog: ship forward/reverse/yaw only.
-- Mobile look drag outside the analog: camera only.
+- `R`: bank/turn right.
+- `Q`: bank/turn left.
+- `ArrowUp`: pitch nose up once safely airborne.
+- `ArrowDown`: pitch nose down once safely airborne.
+- Mouse cursor / mouse look: on-foot camera only; ship chase stays locked.
+- Mobile analog: ship forward/reverse/strafe + lift while held.
+- Mobile BANK buttons: turn-bank the ship.
+- Mobile NOSE buttons: pitch the ship in high flight.
+- Mobile look drag outside the analog: do not use for ship chase orbit unless
+  a separate free-camera mode is deliberately added.
 
-## How To Wire That Exact Map
+## How The Working Map Is Wired
 
-### 1. Wire `Q` / `R` Roll
+### 1. `Q` / `R` Bank-Turn
 
 Open `src/main.js`, find `readShipControls(dt)`.
 
-Current code has:
-
-```js
-controls.roll = 0;
-```
-
-Change it to:
-
 ```js
 const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);
+controls.yaw = keyRoll * 0.65;
 controls.roll = keyRoll;
 ```
 
-Then open `src/ship/ship.js`.
-
-Current assisted mode ignores roll because it forces the ship upright with:
-
-```js
-_mobileMatrix.makeBasis(_mobileRight, up, fwdFlat);
-this.quaternion.setFromRotationMatrix(_mobileMatrix);
-this.angVel.set(0, 0, 0);
-```
-
-That means even if `controls.roll` is set, assisted mode erases it. To make
-roll real, assisted mode needs a stored bank/roll angle or it needs to stop
-fully rebuilding the quaternion from `right/up/forward` every frame.
-
-Safer first version:
-
-- Add a `this.assistRoll = 0` field to the ship.
-- In assisted mode, update it from `controls.roll`.
-- After making the upright basis, rotate around `fwdFlat` by `this.assistRoll`.
-
-Pseudo-shape:
+Open `src/ship/ship.js`. Assisted mode rebuilds an upright basis for phone
+stability, then applies stored roll:
 
 ```js
-this.assistRoll = (this.assistRoll || 0) + controls.roll * ROLL_RATE * dt;
-this.assistRoll *= Math.max(0, 1 - 1.5 * dt); // auto-level slowly
+this.assistRoll = (this.assistRoll || 0) + (controls.roll || 0) * ROLL_RATE * torqueMul * dt;
+this.assistRoll *= Math.max(0, 1 - 1.5 * dt);
 _q.setFromAxisAngle(fwdFlat, this.assistRoll);
 this.quaternion.premultiply(_q).normalize();
 ```
 
-If you want permanent aircraft-style roll, lower or remove the auto-level line.
+Do not move the camera directly here. Rotate the ship; the locked chase rig
+will follow.
 
-### 2. Keep `W` / `S` As Nose Thrust
+### 2. `ArrowUp` / `ArrowDown` And NOSE Buttons
 
 Open `src/main.js`, `readShipControls(dt)`.
 
-This part is correct for the desired map:
+```js
+const keyPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);
+controls.pitch = keyPitch;
+```
+
+Open `src/ui/touch.js`. Mobile NOSE buttons set the same virtual keys:
+
+```html
+<button data-code="ArrowUp">NOSE UP</button>
+<button data-code="ArrowDown">NOSE DOWN</button>
+```
+
+Open `src/ship/ship.js`. Assisted mode only applies stored pitch once safely
+airborne:
+
+```js
+freeAttitude = !this.landed && alt > 60;
+this.assistPitch = (this.assistPitch || 0) + (controls.pitch || 0) * ASSIST_PITCH_RATE * torqueMul * dt;
+```
+
+If the buttons feel backwards in a phone test, flip the subtraction in
+`keyPitch`. Do not solve it by rotating the camera.
+
+### 3. Keep `W` / `S` As Nose Thrust
+
+Open `src/main.js`, `readShipControls(dt)`.
 
 ```js
 const keyForward = (input.down('KeyW') ? 1 : 0) - (input.down('KeyS') ? 1 : 0);
 controls.assistForward = assistForward;
 ```
 
-Open `src/ship/ship.js`, assisted mode.
-
-This is the important physics line:
-
-```js
-this.velocity.addScaledVector(fwdFlat, forward * ASSIST_FORWARD_ACCEL * dt);
-```
-
-That means W/S thrust through the ship's calculated front. If it feels like W
-does not push through the windows, inspect the visual orientation in
-`rebuildVisual()`. The glass/front must be on local `+Z`.
-
-### 3. Keep `A` / `D` As Ship Yaw, Not Camera
-
-Open `src/main.js`, `readShipControls(dt)`.
-
-Current mapping:
+Open `src/ship/ship.js`, assisted mode. Near the ground this uses flat forward
+for stable landings. In high flight it uses the ship's real pitched nose:
 
 ```js
-const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);
-controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;
+const assistFwd = freeAttitude
+  ? _assistFwd3.set(0, 0, 1).applyQuaternion(this.quaternion).normalize()
+  : fwdFlat;
 ```
 
-If left/right are backwards, flip the subtraction:
+### 4. Keep `A` / `D` As Strafe, Not Camera And Not Yaw
 
 ```js
-const keyYaw = (input.down('KeyA') ? 1 : 0) - (input.down('KeyD') ? 1 : 0);
+const keySide = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);
+const assistStrafe = input.touchMode ? (input.touchShipYaw || 0) : keySide;
+controls.assistStrafe = assistStrafe;
 ```
 
-Open `src/ship/ship.js`, assisted mode.
+### 5. Chase Camera Rule
 
-This is the yaw rotation. The negative sign is deliberate in the current build:
-D / stick-right should turn right under the chase camera.
+The ship chase camera is a locked rig. It follows the ship's real 3D nose and
+uses planet-up as the preferred up vector:
 
 ```js
-_q.setFromAxisAngle(up, -controls.yaw * ASSIST_YAW_RATE * dt);
-this.quaternion.premultiply(_q).normalize();
+_shipCamFwd.set(0, 0, 1).applyQuaternion(ship.quaternion);
+_cm.lookAt(camPos, _shipCamTarget, _shipCamViewUp);
 ```
 
-If A/D visually turn the camera instead of the ship, the issue is probably in
-`updateCamera(dt)`, not here.
-
-### 4. Wire Arrow Keys To Camera Only
-
-Open `src/main.js`, `updateCamera(dt)`.
-
-Right now chase camera orbit is mostly mouse/touch based:
-
-```js
-shipTouchCamYaw -= input.mouseDX * 0.003;
-shipTouchCamPitch = ...
-```
-
-Add keyboard camera input near the same place:
-
-```js
-const arrowYaw = (input.down('ArrowRight') ? 1 : 0) - (input.down('ArrowLeft') ? 1 : 0);
-const arrowPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);
-shipTouchCamYaw += arrowYaw * 1.8 * dt;
-shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));
-```
-
-Do not send arrow keys into `controls.yaw`, `controls.pitch`, or `controls.roll`
-if the arrows should be camera only.
-
-### 5. Decide The Chase Camera Rule
-
-There are two valid choices. Pick one deliberately.
-
-Option A: camera follows the ship front like many arcade flight games.
-
-This is the current post-Claude behavior and should stay the default.
-
-In `updateCamera(dt)`, chase camera should apply `ship.quaternion` directly:
-
-```js
-_cv.applyQuaternion(ship.quaternion);
-```
-
-This means when the ship yaws, the camera swings with it and the world turns on
-screen. It feels like the camera is attached behind the ship.
+BANK, NOSE, analog, W/S, and A/D should never directly orbit this camera. They
+change the ship; the camera follows.
 
 Option B: camera is independent unless the player moves camera.
 

@@ -227,6 +227,19 @@ check('modules affect stats (thrust > 0, mass grew)', ship.stats.thrust > 0 && s
     installed.ok && repaired.ok && removed.ok && testInv.count('part_scanner') === 1,
     `${installed.msg} | ${repaired.msg} | ${removed.msg}`);
 }
+{
+  const statShip = new Ship(stubEngine, BODIES);
+  statShip.modules.maneuver_fl = { typeId: 'maneuver', hp: getPartType('maneuver').maxHp };
+  statShip.modules.maneuver_fr = { typeId: 'maneuver', hp: getPartType('maneuver').maxHp };
+  statShip.modules.shield_nose = { typeId: 'shield', hp: getPartType('shield').maxHp };
+  statShip.modules.scanner_top = { typeId: 'scanner', hp: getPartType('scanner').maxHp };
+  statShip.modules.weapon_wing_l = { typeId: 'weapon', hp: getPartType('weapon').maxHp };
+  statShip.refreshStats();
+  check('expanded modules contribute live stats',
+    statShip.stats.torqueBoost > 0.6 && statShip.stats.shieldCap === 150 &&
+    statShip.stats.scanRange === 5000 && statShip.stats.weaponCount === 1,
+    `turn=${statShip.stats.torqueBoost} shield=${statShip.stats.shieldCap} scan=${statShip.stats.scanRange} weapons=${statShip.stats.weaponCount}`);
+}
 
 console.log('\n== 5. FULL TRAVERSAL SIM: Earth pad → space → Moon landing ==');
 // Uses the REAL Ship integrator — this is the gameplay loop, headless.
@@ -449,6 +462,23 @@ console.log('\n== 8. Turning (yaw authority) ==');
 }
 {
   const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 220, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const ctl = { pitch: -1, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const dt = 1 / 60;
+  const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  for (let i = 0; i < 45; i++) t.tick(dt, true, ctl);
+  const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  check('assisted NOSE pitch tilts the visible ship in high flight',
+    Math.abs(t.assistPitch) > 0.45 && startFwd.dot(endFwd) < 0.85,
+    `pitch=${(t.assistPitch || 0).toFixed(2)} dot=${startFwd.dot(endFwd).toFixed(2)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
   t.worldPos.set(0, earth.radius + 200, 0);
   t.velocity.set(0, 0, 0);
   t.quaternion.identity();
@@ -487,6 +517,24 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const flatV = t.velocity.clone().addScaledVector(new THREE.Vector3(0, 1, 0), -t.velocity.y);
   check('assisted forward thrust follows ship nose, not camera forward', flatV.dot(nose) > flatV.dot(oldCameraForward) + 4,
     `noseDot=${flatV.dot(nose).toFixed(1)} cameraDot=${flatV.dot(oldCameraForward).toFixed(1)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 220, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const dt = 1 / 60;
+  const pitchUp = { pitch: -1, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const burn = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 1, assistStrafe: 0 };
+  for (let i = 0; i < 50; i++) t.tick(dt, true, pitchUp);
+  const nose = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion).normalize();
+  for (let i = 0; i < 25; i++) t.tick(dt, true, burn);
+  check('assisted high-flight thrust follows pitched nose',
+    t.velocity.clone().normalize().dot(nose) > 0.65 && Math.abs(t.velocity.y) > 2,
+    `velDot=${t.velocity.clone().normalize().dot(nose).toFixed(2)} vy=${t.velocity.y.toFixed(1)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);

@@ -1,5 +1,16 @@
 # CHANGELOG.md
 
+## 2026-07-04 — High-flight nose pitch + module stat accounting (Builder: Codex)
+- Added NOSE UP / NOSE DOWN mobile buttons and ↑/↓ keyboard pitch so the ship
+  can aim up/down once safely airborne instead of staying planet-upright forever.
+- Chase camera now follows the ship's real 3D nose while preserving a stable
+  up vector, so pitch/flip attempts remain readable.
+- Maneuvering thrusters now contribute torque boost; shield, scanner, weapon,
+  radiator, and expanded module stats are computed and shown in the ship
+  builder. Weapons/scanner/shields still need future gameplay verbs.
+- Added regression tests for expanded module stats, assisted pitch, and thrust
+  following a pitched nose.
+
 ## 2026-07-04 — Ship visual rotation + locked chase camera (Builder: Codex)
 - Fixed the actual visible-ship rotation bug: the ship physics quaternion was
   changing, but the floating-origin renderer only copied position. The ship

@@ -16,6 +16,32 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — High-flight nose pitch and module stat accounting
+
+**State:** working in tests. Jaron confirmed the bank/locked-chase behavior
+felt perfect, then identified the next missing flight axis: in space/high
+flight the ship could not pitch nose-up/nose-down to aim at the ground or flip.
+
+**Shipped:** added keyboard ↑/↓ and mobile NOSE UP / NOSE DOWN controls. Assisted
+flight now stores `assistPitch` once safely airborne, applies maneuvering
+thruster `torqueBoost`, and uses the ship's real 3D nose for high-flight thrust.
+The chase camera follows the real 3D nose while keeping a stable up vector.
+Expanded modules now contribute live stats: torque, shields, scanner range,
+heat dissipation, weapons, cargo, armor, power, thrust, and fuel.
+
+**Verified:** `npm test` passes with 87/87 checks, including new regressions for
+expanded module stats, visible NOSE pitch, and thrust following a pitched nose.
+
+**Next up:** phone-test high-flight pitch. If the buttons feel backwards, flip
+the `keyPitch` subtraction in `src/main.js`; if the pitch engages too early/late,
+tune the `alt > 60` free-attitude threshold in `src/ship/ship.js`.
+
+**Gotchas:** Weapons/scanner/shields are accounted as stats but do not yet have
+live action buttons such as FIRE, SCAN, or SHIELD. Add those as real gameplay
+systems later, not dummy buttons.
+
+---
+
 ## 2026-07-04 — Codex — Ship visual rotation fixed and chase camera locked
 
 **State:** working. Jaron confirmed the real breakthrough: the ship now visibly

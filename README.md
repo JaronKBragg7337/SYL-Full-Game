@@ -52,12 +52,13 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 ## Controls
 
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
-Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **Z** descend ·
+Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **↑/↓** nose pitch in high flight · **Z** descend ·
 locked forward chase camera · **Space** climb · **X/Ctrl** brake · **G** gear ·
 **C** cockpit/chase camera · **E** exit (landed)
 Touch ship: hold the left stick to lift while driving/strafe; **BANK L/R** turns
-the ship and rolls it; **DESCEND** overrides lift so you can guide the ship down.
-Ship chase camera is locked behind/above the nose so turns stay readable.
+the ship and rolls it; **NOSE UP/DOWN** pitches the ship once safely airborne;
+**DESCEND** overrides lift so you can guide the ship down. Ship chase camera is
+locked behind/above the nose so turns stay readable.
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
