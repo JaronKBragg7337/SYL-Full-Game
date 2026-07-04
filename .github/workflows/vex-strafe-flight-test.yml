@@ -1,0 +1,109 @@
+name: Vex strafe flight test
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: contains(github.event.head_commit.message, 'Add one-time strafe flight patch runner')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Apply strafe flight test patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          main_path = Path('src/main.js')
+          main = main_path.read_text()
+          ship_path = Path('src/ship/ship.js')
+          ship = ship_path.read_text()
+
+          old_main = """  // Assisted ship piloting uses the same direct feel as dev fly:\n  // W/S or stick up/down = forward/reverse, A/D or stick left/right = turn.\n  const touchThrottle = input.touchShipThrottle || 0;\n  const keyForward = (input.down('KeyW') ? 1 : 0) - (input.down('KeyS') ? 1 : 0);\n  const assistForward = input.touchMode ? touchThrottle : keyForward;\n  ship.throttle = Math.max(0, assistForward);\n\n  const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);\n  const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);\n\n  controls.pitch = 0;\n  controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;\n  controls.roll = input.touchMode ? 0 : keyRoll;"""
+          new_main = """  // Assisted ship piloting strafe test:\n  // W/S or stick up/down = forward/reverse movement.\n  // A/D or stick left/right = lateral movement, NOT yaw.\n  // Camera/look input owns camera rotation separately.\n  const touchThrottle = input.touchShipThrottle || 0;\n  const keyForward = (input.down('KeyW') ? 1 : 0) - (input.down('KeyS') ? 1 : 0);\n  const assistForward = input.touchMode ? touchThrottle : keyForward;\n  ship.throttle = Math.max(0, assistForward);\n\n  const keySide = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);\n  const assistStrafe = input.touchMode ? (input.touchShipYaw || 0) : keySide;\n  const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);\n\n  controls.pitch = 0;\n  controls.yaw = 0;\n  controls.roll = input.touchMode ? 0 : keyRoll;"""
+          if old_main not in main:
+            raise SystemExit('main readShipControls movement block not found')
+          main = main.replace(old_main, new_main, 1)
+          old_main2 = """  controls.assistForward = assistForward;"""
+          new_main2 = """  controls.assistForward = assistForward;\n  controls.assistStrafe = assistStrafe;"""
+          if old_main2 not in main:
+            raise SystemExit('main assistForward assignment not found')
+          main = main.replace(old_main2, new_main2, 1)
+
+          old_const = """const ASSIST_FORWARD_ACCEL = 48; // m/s^2 through the ship nose"""
+          new_const = """const ASSIST_FORWARD_ACCEL = 48; // m/s^2 through the ship nose\nconst ASSIST_STRAFE_ACCEL = 38;  // m/s^2 lateral test: A/D or stick-side slides instead of yawing"""
+          if old_const not in ship:
+            raise SystemExit('ship ASSIST_FORWARD_ACCEL const not found')
+          ship = ship.replace(old_const, new_const, 1)
+
+          old_comment = """  // controls: { pitch, yaw, roll: -1..1; thrustUp: bool; brake: bool; assist?: bool; assistForward?: -1..1 }"""
+          new_comment = """  // controls: { pitch, yaw, roll: -1..1; thrustUp: bool; brake: bool; assist?: bool; assistForward?: -1..1; assistStrafe?: -1..1 }"""
+          if old_comment not in ship:
+            raise SystemExit('ship controls comment not found')
+          ship = ship.replace(old_comment, new_comment, 1)
+
+          old_ship_block = """      // Vehicle-game rules: yaw turns the hull's actual front; thrust pushes\n      // through that front. The stick never edits the travel vector directly.\n      if (controls.yaw) {\n        _q.setFromAxisAngle(up, -controls.yaw * ASSIST_YAW_RATE * dt);\n        this.quaternion.premultiply(_q).normalize();\n      }"""
+          new_ship_block = """      // Strafe-flight test: sideways input is lateral movement, not yaw.\n      // Raw yaw is disabled by main.js during assisted mode for this test.\n      if (controls.yaw) {\n        _q.setFromAxisAngle(up, -controls.yaw * ASSIST_YAW_RATE * dt);\n        this.quaternion.premultiply(_q).normalize();\n      }"""
+          if old_ship_block not in ship:
+            raise SystemExit('ship assisted yaw comment/block not found')
+          ship = ship.replace(old_ship_block, new_ship_block, 1)
+
+          old_accel_block = """        const forward = Math.max(-1, Math.min(1, controls.assistForward ?? this.throttle));\n        if (Math.abs(forward) > 0.01) {\n          accel.addScaledVector(fwdFlat, forward * ASSIST_FORWARD_ACCEL);\n          burning += Math.abs(forward) * 0.45;\n        }\n        if (controls.thrustUp) {"""
+          new_accel_block = """        const forward = Math.max(-1, Math.min(1, controls.assistForward ?? this.throttle));\n        const strafe = Math.max(-1, Math.min(1, controls.assistStrafe ?? 0));\n        if (Math.abs(forward) > 0.01) {\n          accel.addScaledVector(fwdFlat, forward * ASSIST_FORWARD_ACCEL);\n          burning += Math.abs(forward) * 0.45;\n        }\n        if (Math.abs(strafe) > 0.01) {\n          accel.addScaledVector(_mobileRight, strafe * ASSIST_STRAFE_ACCEL);\n          burning += Math.abs(strafe) * 0.30;\n        }\n        if (controls.thrustUp) {"""
+          if old_accel_block not in ship:
+            raise SystemExit('ship assisted acceleration block not found')
+          ship = ship.replace(old_accel_block, new_accel_block, 1)
+
+          old_active = """      const forward = Math.abs(controls.assistForward ?? 0);\n      const active = forward > 0.01 || controls.thrustUp;"""
+          new_active = """      const forward = Math.abs(controls.assistForward ?? 0);\n      const strafe = Math.abs(controls.assistStrafe ?? 0);\n      const active = forward > 0.01 || strafe > 0.01 || controls.thrustUp;"""
+          if old_active not in ship:
+            raise SystemExit('ship assisted active block not found')
+          ship = ship.replace(old_active, new_active, 1)
+
+          old_grip = """      // Grip: rotate the tangential velocity toward the ship's front.\n      _vTan.copy(this.velocity).addScaledVector(up, -this.velocity.dot(up));\n      const tanSpeed = _vTan.length();\n      if (tanSpeed > 0.5) {\n        const nose = _mobileFwd.set(0, 0, 1).applyQuaternion(this.quaternion)\n          .addScaledVector(up, -_mobileFwd.dot(up)).normalize();\n        const sign = _vTan.dot(nose) >= 0 ? 1 : -1;\n        _vTan.lerp(_gripTarget.copy(nose).multiplyScalar(sign * tanSpeed), Math.min(1, ASSIST_GRIP * dt));\n        this.velocity.copy(_vTan).addScaledVector(up, vUp);\n      }"""
+          new_grip = """      // Strafe-flight test: do NOT rotate lateral velocity back toward the nose.\n      // Let A/D or stick-side remain lateral movement so it does not become camera/yaw motion.\n      _vTan.copy(this.velocity).addScaledVector(up, -this.velocity.dot(up));\n      const tanSpeed = _vTan.length();"""
+          if old_grip not in ship:
+            raise SystemExit('ship grip block not found')
+          ship = ship.replace(old_grip, new_grip, 1)
+
+          wf = Path('.github/workflows/vex-strafe-flight-test.yml')
+          if wf.exists():
+            wf.unlink()
+          main_path.write_text(main)
+          ship_path.write_text(ship)
+          PY
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Commit test patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.js src/ship/ship.js .github/workflows/vex-strafe-flight-test.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Test assisted strafe flight controls"
+          git push origin HEAD:main
+
+# trigger: strafe flight test
