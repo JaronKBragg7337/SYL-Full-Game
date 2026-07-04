@@ -40,6 +40,7 @@ const ASSIST_FORWARD_ACCEL = 48; // m/s^2 through the ship nose
 const ASSIST_STRAFE_ACCEL = 38;  // m/s^2 lateral test: A/D or stick-side slides instead of yawing
 const ASSIST_MAX_SPEED = 70;
 const ASSIST_LIFT_SPEED = 30;
+const ASSIST_DESCEND_SPEED = 24;
 const ASSIST_IDLE_TAN_DAMP = 3.2; // idle: sideways/forward motion eases to a stop in ~1.5 s
 const ASSIST_IDLE_VERT_DAMP = 1.25; // idle: vertical stays under REAL gravity (terminal ~8 m/s => safe auto-landing)
 const ASSIST_GRIP = 2.6;        // how fast existing velocity swings to follow the nose (flying-game feel)
@@ -213,7 +214,7 @@ export class Ship {
   }
 
   // ------------------------------------------------------------------ flight
-  // controls: { pitch, yaw, roll: -1..1; thrustUp: bool; brake: bool; assist?: bool; assistForward?: -1..1; assistStrafe?: -1..1; assistForwardDir?: Vector3; assistRightDir?: Vector3 }
+  // controls: { pitch, yaw, roll: -1..1; thrustUp: bool; descend: bool; brake: bool; assist?: bool; assistForward?: -1..1; assistStrafe?: -1..1; assistForwardDir?: Vector3; assistRightDir?: Vector3 }
   tick(dt, piloted, controls) {
     const body = dominantBody(this.bodies, this.worldPos);
     this._domBody = body;
@@ -282,7 +283,10 @@ export class Ship {
           accel.addScaledVector(_mobileRight, strafe * ASSIST_STRAFE_ACCEL);
           burning += Math.abs(strafe) * 0.30;
         }
-        if (controls.thrustUp) {
+        if (controls.descend) {
+          accel.addScaledVector(up, -ASSIST_DESCEND_SPEED);
+          burning += 0.28;
+        } else if (controls.thrustUp) {
           accel.addScaledVector(up, ASSIST_LIFT_SPEED);
           burning += 0.35;
         }
@@ -317,7 +321,7 @@ export class Ship {
     if (assisted && this.stats.ready && this.fuel > 0) {
       const forward = Math.abs(controls.assistForward ?? 0);
       const strafe = Math.abs(controls.assistStrafe ?? 0);
-      const active = forward > 0.01 || strafe > 0.01 || controls.thrustUp;
+      const active = forward > 0.01 || strafe > 0.01 || controls.thrustUp || controls.descend;
       let vUp = this.velocity.dot(up);
       _vTan.copy(this.velocity).addScaledVector(up, -vUp);
       const tanDamp = controls.brake ? ASSIST_BRAKE_DAMP : (active ? ASSIST_ACTIVE_DAMP : ASSIST_IDLE_TAN_DAMP);

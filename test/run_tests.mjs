@@ -152,9 +152,9 @@ console.log('\n== 3. Controls and local playability ==');
   const shipStick = joystickShipControls(radius, -radius, radius);
   check('touch joystick exposes normalized axes', right.x > 0.99 && up.y < -0.99);
   check('touch joystick still maps to WASD on foot', move.forward && !move.back);
-  check('touch joystick maps to calm ship yaw + throttle while piloting',
+  check('touch joystick produces ship side-axis + throttle while piloting',
     shipStick.yaw > 0.45 && shipStick.throttle > 0.65 && shipStick.pitch === 0,
-    `yaw=${shipStick.yaw.toFixed(2)} throttle=${shipStick.throttle.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
+    `side=${shipStick.yaw.toFixed(2)} throttle=${shipStick.throttle.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
 }
 {
   const player = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);
@@ -400,6 +400,48 @@ console.log('\n== 8. Turning (yaw authority) ==');
   for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
   check('assisted S/reverse creates backward travel', t.velocity.z < -20,
     `vz=${t.velocity.z.toFixed(1)}`);
+}
+{
+  const upShip = new Ship(stubEngine, BODIES);
+  upShip.worldPos.set(0, earth.radius + 200, 0);
+  upShip.velocity.set(0, 0, 0);
+  upShip.quaternion.identity();
+  upShip.landed = false;
+  upShip.fuel = 100;
+  upShip.stats.ready = true;
+  const dt = 1 / 60;
+  const liftCtl = { pitch: 0, yaw: 0, roll: 0, thrustUp: true, descend: false, brake: false, assist: true, assistForward: 0 };
+  for (let i = 0; i < 60; i++) upShip.tick(dt, true, liftCtl);
+  const upDir = upAt(earth, upShip.worldPos, new THREE.Vector3());
+  const liftV = upShip.velocity.dot(upDir);
+
+  const downShip = new Ship(stubEngine, BODIES);
+  downShip.worldPos.set(0, earth.radius + 200, 0);
+  downShip.velocity.set(0, 0, 0);
+  downShip.quaternion.identity();
+  downShip.landed = false;
+  downShip.fuel = 100;
+  downShip.stats.ready = true;
+  const descendCtl = { pitch: 0, yaw: 0, roll: 0, thrustUp: true, descend: true, brake: false, assist: true, assistForward: 0 };
+  for (let i = 0; i < 60; i++) downShip.tick(dt, true, descendCtl);
+  const downDir = upAt(earth, downShip.worldPos, new THREE.Vector3());
+  const descendV = downShip.velocity.dot(downDir);
+  check('assisted descend overrides mobile lift', liftV > 5 && descendV < -5,
+    `liftV=${liftV.toFixed(1)} descendV=${descendV.toFixed(1)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const ctl = { pitch: 0, yaw: 0, roll: 1, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0.55 };
+  const dt = 1 / 60;
+  for (let i = 0; i < 45; i++) t.tick(dt, true, ctl);
+  check('assisted bank button creates roll and lateral sway', Math.abs(t.assistRoll) > 0.2 && Math.abs(t.velocity.x) + Math.abs(t.velocity.z) > 3,
+    `roll=${(t.assistRoll || 0).toFixed(2)} velocity=${t.velocity.toArray().map(v => v.toFixed(1)).join(',')}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
