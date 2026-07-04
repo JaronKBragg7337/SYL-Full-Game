@@ -16,6 +16,28 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Assisted ship piloting default
+
+**State:** working on `main` after Jaron reported both mobile and desktop ship
+controls still felt wrong: A/D moved the camera/slide, S did little, while dev
+fly mode felt correct.
+
+**Shipped:** normal ship piloting now uses the dev-fly-style assisted movement
+spine, not the old throttle/inertial steering by default. W/S or mobile stick
+up/down drive forward/reverse, A/D or stick left/right turn ship heading,
+Space/LIFT climbs, and Brake/Control slows. Mouse/touch look is camera orbit
+only; it does not steer the ship. Camera recenters when look input stops.
+
+**Verified:** run test/smoke before public sync.
+
+**Next up:** Jaron retests both phone and desktop. Desktop: W forward, S reverse,
+A/D turn ship, mouse only changes camera angle.
+
+**Gotchas:** advanced 6DOF is now effectively parked behind the code path, not
+the default player feel. Keep basic movement pleasant first.
+
+---
+
 ## 2026-07-04 — Codex — Dev-fly feel for mobile ship
 
 **State:** working on `main` after Jaron clarified dev fly mode feels correct:

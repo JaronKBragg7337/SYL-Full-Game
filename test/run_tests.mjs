@@ -355,6 +355,21 @@ console.log('\n== 8. Turning (yaw authority) ==');
   check('mobile assist steadies when controls released', t.velocity.length() < 1.2,
     `speed=${t.velocity.length().toFixed(2)}`);
 }
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.throttle = 0;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: -1 };
+  const dt = 1 / 60;
+  for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
+  check('assisted S/reverse creates backward travel', t.velocity.z < -20,
+    `vz=${t.velocity.z.toFixed(1)}`);
+}
 
 console.log('\n== 9. Dev editor tools ==');
 {

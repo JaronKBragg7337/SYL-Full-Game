@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.2.14 — 2026-07-04 — Assisted ship piloting becomes the default (Builder: Codex)
+- Changed normal ship piloting to the dev-fly-style direct control spine:
+  `W/S` or mobile stick up/down now means forward/reverse, `A/D` or mobile
+  stick left/right turns the ship, `Space`/LIFT climbs, and Brake/Control slows.
+- Mouse/touch look is now camera orbit only. Ship steering no longer consumes
+  mouse/touch look deltas, so the stick/keyboard turns the ship while separate
+  look input changes only the chase camera.
+- Camera recenters behind the ship when no separate look input is active.
+
 ## 0.2.13 — 2026-07-04 — Dev-fly feel for mobile ship controls (Builder: Codex)
 - Split mobile ship stick input from mobile camera look: the joystick touch id
   can no longer feed touch-look, and ship steering no longer reads touch
