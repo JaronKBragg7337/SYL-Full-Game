@@ -370,6 +370,22 @@ console.log('\n== 8. Turning (yaw authority) ==');
   check('assisted S/reverse creates backward travel', t.velocity.z < -20,
     `vz=${t.velocity.z.toFixed(1)}`);
 }
+{
+  const t = new Ship(stubEngine, BODIES);
+  const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
+  const insideBunker = offsetWorld(earth, zone, 40, 0, 3);
+  t.placeAt(insideBunker, upAt(earth, insideBunker));
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  t.velocity.set(0, 0, 0);
+  const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: 0 };
+  t.tick(1 / 60, true, ctl);
+  const en = localOffset(earth, zone, t.worldPos);
+  const outside = Math.abs(en.east - 40) >= 12.75 || Math.abs(en.north) >= 10.75;
+  check('ship hull collides with authored structures', outside,
+    `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
+}
 
 console.log('\n== 9. Dev editor tools ==');
 {

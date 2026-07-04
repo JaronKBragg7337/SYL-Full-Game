@@ -8,6 +8,8 @@
   mouse/touch look deltas, so the stick/keyboard turns the ship while separate
   look input changes only the chase camera.
 - Camera recenters behind the ship when no separate look input is active.
+- Ship movement now uses the existing analytic structure collision with a larger
+  hull radius so outpost buildings no longer act pass-through for the ship.
 
 ## 0.2.13 — 2026-07-04 — Dev-fly feel for mobile ship controls (Builder: Codex)
 - Split mobile ship stick input from mobile camera look: the joystick touch id
