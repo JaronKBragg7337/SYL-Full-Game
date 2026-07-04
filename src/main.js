@@ -346,24 +346,28 @@ const _flipY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0
 const controls = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false };
 
 function readShipControls(dt) {
-  // Assisted ship piloting uses the same direct feel as dev fly:
-  // W/S or stick up/down = forward/reverse, A/D or stick left/right = turn.
+  // Assisted ship piloting strafe test:
+  // W/S or stick up/down = forward/reverse movement.
+  // A/D or stick left/right = lateral movement, NOT yaw.
+  // Camera/look input owns camera rotation separately.
   const touchThrottle = input.touchShipThrottle || 0;
   const keyForward = (input.down('KeyW') ? 1 : 0) - (input.down('KeyS') ? 1 : 0);
   const assistForward = input.touchMode ? touchThrottle : keyForward;
   ship.throttle = Math.max(0, assistForward);
 
-  const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);
+  const keySide = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);
+  const assistStrafe = input.touchMode ? (input.touchShipYaw || 0) : keySide;
   const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);
 
   controls.pitch = 0;
-  controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;
+  controls.yaw = 0;
   controls.roll = input.touchMode ? 0 : keyRoll;
   controls.thrustUp = input.down('Space');
   controls.brake = input.down('KeyX') || input.down('ControlLeft') || input.down('ControlRight') || touchThrottle < -0.85;
   controls.assist = true;
   controls.mobileAssist = input.touchMode;
   controls.assistForward = assistForward;
+  controls.assistStrafe = assistStrafe;
 
   // Mobile takeoff assist: if the player is throttling up from the ground, add
   // vertical lift until the hull is safely away from terrain. This prevents the
