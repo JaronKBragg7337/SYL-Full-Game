@@ -1,5 +1,15 @@
 # CHANGELOG.md
 
+## 0.2.10 — 2026-07-04 — Touch analog ship steering (Builder: Codex)
+- Checked `SpaceYouLand` and carried over the key pilot-control lesson: ship
+  steering must be separate from camera look while seated.
+- Touch joystick now becomes a real ship steering stick in piloting mode:
+  left/right yaw, up/down pitch. The THR buttons remain the throttle controls.
+- Split touch virtual-key sources so the steering stick cannot cancel THR+/THR-
+  or TURN buttons when both thumbs are used together.
+- Added headless tests for normalized touch axes and ship-stick mapping.
+  `npm test` 62 -> 65.
+
 ## 0.2.9 — 2026-07-04 — Mobile-safe SYL dev editor first slice (Builder: Codex)
 - Added opt-in `?dev=1` DEV editor tools: ready a mobile-safe test ship, give a
   supply kit, fill fuel, move the ship to the player, jump the player to the

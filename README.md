@@ -54,6 +54,7 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
 Ship: **W/S** throttle · **mouse** pitch/yaw · **A/D** turn · **Q/E** roll · **Space** vertical thrust ·
 **X** brake · **G** gear · **C** camera · **E** exit (landed)
+Touch ship: left stick becomes **STEER** for pitch/yaw; **THR+ / THR-** set throttle.
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
@@ -66,7 +67,7 @@ heavy external assets are required.
 ## Verify it works
 
 ```
-npm test        # 62 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting, ship yaw, dev tools
+npm test        # 65 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, registries, crafting, dev tools
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 

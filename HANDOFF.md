@@ -16,6 +16,31 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Touch analog ship steering
+
+**State:** working on `main`. This is the direct follow-up to Jaron's report
+that the mobile stick only felt like camera/look and the ship mostly flew
+straight.
+
+**Shipped:** checked the reference repos. `SpaceYouLand` had the useful lesson:
+when seated, the body/camera and ship steering must be decoupled. Ported that
+web-safe: `src/ui/touch.js` now maps the left stick to analog ship pitch/yaw in
+`PILOTING` mode, `src/main.js` feeds those axes into the ship controls, and
+`src/core/engine.js` tracks touch virtual-key sources so the stick cannot cancel
+THR+/THR- or TURN buttons. Updated README/help/changelog.
+
+**Verified:** `node --check` on edited JS and `npm test` 65/65.
+
+**Next up:** Jaron should feel-test on an actual phone/tablet: board the ship,
+press THR+, then steer with the left stick. After that, continue prefab
+placement/blueprint persistence for buildings and future modular ship rooms.
+
+**Gotchas:** Browser desktop mobile viewport still does not reliably expose real
+touch APIs here, so the automated check is unit/headless plus code inspection.
+Real touch feel still needs Jaron's device pass.
+
+---
+
 ## 2026-07-04 — Codex — SYL dev editor first slice
 
 **State:** working on `main`. Public SYL already carries Kimi expansion,
