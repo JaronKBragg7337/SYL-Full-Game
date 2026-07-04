@@ -273,11 +273,10 @@ function updateCamera(dt) {
       // Mouse / outside-the-stick drag adds a TEMPORARY orbit offset that
       // eases back to dead-behind when released. Never re-add a steering hold.
       _cv.set(0, 4.5, -15);
-      const mobileStickSteering = input.touchMode && input.touchJoystickActive && Math.abs(input.touchShipYaw || 0) > 0.01;
       if (!shipCamBaseReady) {
         shipCamBaseQuat.copy(ship.quaternion);
         shipCamBaseReady = true;
-      } else if (!mobileStickSteering) {
+      } else if (!input.touchMode) {
         shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));
       }
       const looking = input.touchMode
