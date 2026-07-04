@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## 0.2.5-test — 2026-07-04 — Kimi expansion local playtest branch (Builder: Codex)
+- Created local branch `test/kimi-expansion-pack` for Jaron playtesting only;
+  main/live heartbeat deployment were not touched.
+- Added Kimi expansion registries for items, bodies, ship parts/slots, and
+  crafting recipes, wired additively so existing IDs stay stable.
+- Added deterministic test crates at new expansion landing zones without
+  removing existing Fortis, Moon, or Rustholm pickups.
+- Added inventory crafting UI under the existing `I` panel plus
+  `Inventory.has()` compatibility for recipe checks.
+- Expanded `npm test` from 41 to 55 checks covering expanded registry integrity,
+  body discovery resource references, faction references, ship slot/part
+  references, expanded install/remove/repair flow, and crafting.
+
 ## 0.2.4 — 2026-07-03 — Mobile panel close button + README discipline (Builder: Codex)
 - Added a visible `Close` button to inventory, ship builder, and body-map panels
   so phone players are no longer trapped in a panel without an Esc key.

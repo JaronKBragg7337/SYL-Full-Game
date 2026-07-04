@@ -16,6 +16,32 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Kimi expansion local playtest branch
+
+**State:** working locally on `test/kimi-expansion-pack`. Not pushed to main,
+not deployed, and heartbeat-observatory was not modified.
+
+**Shipped:** added Kimi's expanded items, bodies, ship parts/slots, and recipes
+as additive registries. Added deterministic test crates at the new landing
+zones. Added `Inventory.has()` and a small crafting UI inside the existing
+Inventory panel (`I`). README/CHANGELOG now identify this as a local test branch
+and document the expanded files/test count.
+
+**Verified:** baseline before changes was clean on `main` and `npm test` was
+41/41. Stage 1 items+bodies passed 47/47 after fixing one supplied string
+literal in `bodies_expanded.js`. Stage 2 pickups passed 47/47. Stage 3 expanded
+ship parts/slots passed 51/51. Stage 4 crafting and inventory UI passed 55/55.
+
+**Next up:** Jaron should play the local branch URL and test the body map,
+Fortis repair/fuel loop, new ship-builder slots, inventory crafting, and
+save/load before approving any merge or deployment.
+
+**Gotchas:** non-Fortis factions in the added bodies are still the repo's
+existing placeholder factions, not claimed canon. The Kimi branch is for local
+testing only until Jaron approves it.
+
+---
+
 ## 2026-07-03 — Codex — Mobile panel close button + README drift guard
 
 **State:** working. Gameplay repo and live site are both updated.

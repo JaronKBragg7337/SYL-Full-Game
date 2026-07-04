@@ -22,6 +22,10 @@ for the official SYL game (Unreal/Unity — see VISION.md "The official game"
 and ROADMAP Milestone 7). Target: EVE-style planet-to-planet open world,
 KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
 
+**Kimi expansion test branch:** `test/kimi-expansion-pack` is local-only for
+playtesting new items, bodies, ship slots, and inventory crafting. It is not
+pushed to main and is not deployed to heartbeatobservatory.com/games/syl.
+
 ## The loop that exists right now
 
 You spawn on **Earth** at the **Fortis Outpost**. Your gunship on the pad is damaged:
@@ -38,7 +42,11 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 5. Open the body map (**M**), burn toward the **Moon** (or **Rustholm**), brake with
    **X** on approach, descend, and land gently (under ~16 m/s or you damage modules).
 6. Landing at a marked zone **discovers** it — faction contact, salvage reward, autosave.
-7. **F5** saves, **F9** loads, autosave every 60 s.
+7. On the Kimi test branch, additional bodies/zones carry test crates with
+   expanded resources and ship parts.
+8. Open **I** for inventory and crafting. Crafting is intentionally simple:
+   buttons are enabled only when the carried inputs are present.
+9. **F5** saves, **F9** loads, autosave every 60 s.
 
 ## Controls
 
@@ -51,7 +59,7 @@ Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 ## Verify it works
 
 ```
-npm test        # 41 headless checks incl. controls, collision, and Earth→Moon sim
+npm test        # 55 headless checks incl. controls, collision, Earth→Moon sim, expanded registries, crafting
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -63,6 +71,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Renderer + **floating origin** | `src/core/engine.js` |
 | Noise/terrain math (single source of truth) | `src/core/math3d.js` |
 | Planet/body **data registry** | `src/world/bodies.js` |
+| Kimi expanded body registry | `src/world/bodies_expanded.js` |
 | Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
 | World progress state | `src/world/worldState.js` |
 | Pickup placement | `src/world/pickups.js` |
@@ -70,9 +79,11 @@ Manual pass: see HANDOFF.md → "How to verify".
 | On-foot radial-gravity player | `src/player/player.js` |
 | Ship entity + 6DOF flight | `src/ship/ship.js` |
 | **Modular ship parts/slots** | `src/ship/shipParts.js` |
+| Kimi expanded ship parts/slots | `src/ship/shipParts_expanded.js` |
 | Install/remove/repair/refuel | `src/ship/shipBuilder.js` |
 | Faction registry + standings | `src/factions/factions.js` |
 | Items / inventory | `src/items/items.js`, `src/inventory/inventory.js` |
+| Kimi expanded items / crafting | `src/items/items_expanded.js`, `src/crafting/recipes.js` |
 | Save/load (localStorage, backend-ready) | `src/save/save.js` |
 | HUD/panels | `src/ui/ui.js` |
 | Touch controls | `src/ui/touch.js` |

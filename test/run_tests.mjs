@@ -37,12 +37,14 @@ const {
 const { PICKUPS } = await import('../src/world/pickups.js');
 const { Player } = await import('../src/player/player.js');
 const { Ship } = await import('../src/ship/ship.js');
-const { installPart, repairPart, loadFuel, applyStarterDamage, readinessReport } =
+const { PART_TYPES, SLOTS, getPartType } = await import('../src/ship/shipParts.js');
+const { installPart, repairPart, removePart, loadFuel, applyStarterDamage, readinessReport } =
   await import('../src/ship/shipBuilder.js');
 const { Inventory } = await import('../src/inventory/inventory.js');
 const { FactionState, FACTIONS } = await import('../src/factions/factions.js');
 const { WorldState } = await import('../src/world/worldState.js');
 const { ITEMS, getItem } = await import('../src/items/items.js');
+const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recipes.js');
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = '') {
@@ -57,13 +59,27 @@ console.log('\n== 1. Registries ==');
 check('at least two reachable bodies', BODIES.length >= 2, `got ${BODIES.length}`);
 check('every body has required fields', BODIES.every(b =>
   b.id && b.name && b.radius > 0 && b.surfaceGravity > 0 && b.terrain && Array.isArray(b.landingZones)));
+check('body ids unique', new Set(BODIES.map(b => b.id)).size === BODIES.length);
+check('item ids unique', new Set(ITEMS.map(i => i.id)).size === ITEMS.length);
 check('every landing zone id unique', (() => {
   const ids = BODIES.flatMap(b => b.landingZones.map(z => z.id));
   return new Set(ids).size === ids.length;
 })());
 check('7 factions registered', FACTIONS.length === 7, `got ${FACTIONS.length}`);
 check('Fortis is canon (not placeholder)', FACTIONS.find(f => f.id === 'fortis')?.placeholder === false);
-check('item registry resolves ship part items', ITEMS.filter(i => i.kind === 'part').every(i => i.partId));
+check('item registry resolves ship part items', ITEMS.filter(i => i.kind === 'part').every(i =>
+  i.partId && !!PART_TYPES[i.partId]));
+check('ship slot ids unique', new Set(SLOTS.map(s => s.slotId)).size === SLOTS.length);
+check('ship slots accept real part types', SLOTS.every(s => !!PART_TYPES[s.accepts]));
+check('recipes reference real input/output items', RECIPES.every(r =>
+  Object.keys(r.inputs).every(resolvesItem) && resolvesItem(r.output.itemId)));
+check('every discovery.resourceItemId resolves through getItem', BODIES.every(b =>
+  b.landingZones.every(z => !z.discovery?.resourceItemId || resolvesItem(z.discovery.resourceItemId))));
+check('every body ownerFactionId exists when set', BODIES.every(b =>
+  !b.ownerFactionId || FACTIONS.some(f => f.id === b.ownerFactionId)));
+check('every landing zone factionId exists when set', BODIES.every(b =>
+  b.landingZones.every(z => !z.factionId || FACTIONS.some(f => f.id === z.factionId))));
+check('every body matches the current schema', BODIES.every(bodyMatchesSchema));
 check('pickup ids unique', new Set(PICKUPS.map(p => p.id)).size === PICKUPS.length);
 check('pickups reference real zones/items', PICKUPS.every(p => {
   const body = BODIES.find(b => b.id === p.bodyId);
@@ -157,6 +173,9 @@ console.log('\n== 3. Controls and local playability ==');
 console.log('\n== 4. Modular ship: damage → gather → repair → ready ==');
 const ship = new Ship(stubEngine, BODIES);
 applyStarterDamage(ship);
+check('Ship constructor initializes modules for every slot',
+  SLOTS.every(s => Object.prototype.hasOwnProperty.call(ship.modules, s.slotId)) &&
+  Object.keys(ship.modules).length === SLOTS.length);
 check('starter ship is NOT flight-ready', !ship.stats.ready, JSON.stringify(ship.stats.missing));
 check('starter ship has no fuel', ship.fuel === 0);
 const inv = new Inventory();
@@ -175,6 +194,20 @@ const rep = readinessReport(ship);
 check('ship becomes FLIGHT READY after repairs+installs', ship.stats.ready, rep.lines.join(' | '));
 check('fuel loaded', ship.fuel > 50, `fuel=${ship.fuel}`);
 check('modules affect stats (thrust > 0, mass grew)', ship.stats.thrust > 0 && ship.stats.mass > 200);
+{
+  const testShip = new Ship(stubEngine, BODIES);
+  const testInv = new Inventory();
+  testInv.add('part_scanner');
+  testInv.add('wiring_loom');
+  testInv.add('salvage_alloy');
+  const installed = installPart(testShip, testInv, 'scanner_top', 'part_scanner');
+  if (installed.ok) testShip.modules.scanner_top.hp = getPartType('scanner').maxHp * 0.25;
+  const repaired = repairPart(testShip, testInv, 'scanner_top');
+  const removed = removePart(testShip, testInv, 'scanner_top');
+  check('expanded ship part install/remove/repair flow works',
+    installed.ok && repaired.ok && removed.ok && testInv.count('part_scanner') === 1,
+    `${installed.msg} | ${repaired.msg} | ${removed.msg}`);
+}
 
 console.log('\n== 5. FULL TRAVERSAL SIM: Earth pad → space → Moon landing ==');
 // Uses the REAL Ship integrator — this is the gameplay loop, headless.
@@ -249,6 +282,18 @@ console.log('\n== 6. Save/load round-trip (no browser localStorage needed) ==');
   check('inventory survives round-trip', JSON.stringify(inv2.counts) === JSON.stringify(inv.counts));
 }
 
+console.log('\n== 7. Crafting ==');
+{
+  const craftInv = new Inventory();
+  craftInv.add('water_ice', 2);
+  check('Inventory.has compatibility method works', craftInv.has('water_ice', 2) && !craftInv.has('water_ice', 3));
+  check('availableRecipes finds craftable recipes', availableRecipes(craftInv).some(r => r.id === 'crack_ice'));
+  const madeFuel = craft(craftInv, 'crack_ice');
+  check('craft consumes inputs and creates output',
+    madeFuel.ok && craftInv.count('water_ice') === 0 && craftInv.count('hydrogen_cracked') === 1,
+    madeFuel.msg);
+}
+
 console.log(`\n========================================`);
 console.log(`RESULT: ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);
@@ -278,4 +323,27 @@ function localOffset(body, zone, worldPos) {
     east: dir.dot(frame.east) * body.radius,
     north: dir.dot(frame.north) * body.radius,
   };
+}
+
+function resolvesItem(itemId) {
+  try { return !!getItem(itemId); }
+  catch { return false; }
+}
+
+function bodyMatchesSchema(b) {
+  const num = (n) => typeof n === 'number' && Number.isFinite(n);
+  const vec3 = (v) => Array.isArray(v) && v.length === 3 && v.every(num);
+  const colorRamp = b.colors && num(b.colors.low) && num(b.colors.mid) && num(b.colors.high) &&
+    (b.colors.water === undefined || num(b.colors.water));
+  const atmosphere = b.atmosphere === null ||
+    (b.atmosphere && num(b.atmosphere.color) && num(b.atmosphere.height) && num(b.atmosphere.density));
+  const terrain = b.terrain && num(b.terrain.seed) && num(b.terrain.amplitude) &&
+    num(b.terrain.octaves) && num(b.terrain.freq);
+  const zones = Array.isArray(b.landingZones) && b.landingZones.every((z) =>
+    z.id && z.name && vec3(z.dir) && num(z.angularRadius) && typeof z.flatten === 'boolean' &&
+    (z.factionId === null || z.factionId === undefined || typeof z.factionId === 'string') &&
+    (!z.discovery || (z.discovery.resourceItemId && typeof z.discovery.note === 'string')));
+  return b.id && b.name && vec3(b.position) && num(b.radius) && b.radius > 0 &&
+    num(b.surfaceGravity) && b.surfaceGravity > 0 && colorRamp && atmosphere &&
+    terrain && (b.seaLevel === null || num(b.seaLevel)) && zones;
 }
