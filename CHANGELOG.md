@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.2.17 — 2026-07-04 — Ship steering no longer drags chase camera orbit (Builder: Codex)
+- Changed chase camera anchoring while piloting: WASD/mobile ship steering now
+  holds the current camera anchor instead of applying every ship yaw directly to
+  the chase camera orbit.
+- Camera orbit still works from explicit look input, and the chase camera
+  recenters behind the ship once steering/look input is released.
+- This targets Jaron's report that both desktop WASD and mobile analog still
+  felt like they were moving the camera while in the ship.
+
 ## 0.2.16 — 2026-07-04 — Mobile joystick no longer leaks into ship camera look (Builder: Codex)
 - Added explicit touch joystick active state and stopped joystick/button touch
   events from bubbling into the global touch-look handler.

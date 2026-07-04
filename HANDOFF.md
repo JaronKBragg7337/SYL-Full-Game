@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Ship steering no longer drags chase camera
+
+**State:** Jaron confirmed the joystick/button bubbling fix was not enough:
+desktop WASD and mobile analog still visibly moved the camera while piloting.
+
+**Shipped:** changed the chase camera anchor in `src/main.js`. While ship
+steering/throttle/lift/brake input is active, the chase camera holds its current
+base orientation instead of using every live ship yaw as camera orbit. Explicit
+mouse/touch look still orbits the camera, and when steering/look stops the
+camera recenters behind the ship.
+
+**Verified:** run tests/smoke before public sync.
+
+**Next up:** Jaron should retest: A/D and analog left/right should rotate the
+ship under the view, not swing the camera around unless he drags outside the
+analog or moves the mouse.
+
+**Gotchas:** the camera still follows the ship position; moving/flying the ship
+will move the camera through the world because it is a chase camera, but steering
+should not independently orbit it anymore.
+
+---
+
 ## 2026-07-04 — Codex — Touch joystick/camera event split hardened
 
 **State:** after the Fortis visual port, Jaron's remaining feel issue is that
