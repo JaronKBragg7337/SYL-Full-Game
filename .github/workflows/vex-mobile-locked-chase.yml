@@ -1,0 +1,77 @@
+name: Vex mobile locked chase test
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: contains(github.event.head_commit.message, 'Add one-time mobile locked chase patch runner')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Apply mobile locked chase camera test patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/main.js')
+          s = p.read_text()
+
+          old_base = """      if (!shipCamBaseReady) {\n        shipCamBaseQuat.copy(ship.quaternion);\n        shipCamBaseReady = true;\n      } else {\n        shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));\n      }\n      const looking = input.touchMode\n        ? (input.touchLookActive && !input.touchJoystickActive)\n        : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);"""
+          new_base = """      if (!shipCamBaseReady) {\n        shipCamBaseQuat.copy(ship.quaternion);\n        shipCamBaseReady = true;\n      } else if (input.touchMode) {\n        // Mobile test: lock the chase-camera base directly to the ship nose.\n        // This removes follow-lag so the left stick cannot feel like camera orbit.\n        shipCamBaseQuat.copy(ship.quaternion);\n      } else {\n        shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));\n      }\n      const mobileJoystickCameraLock = input.touchMode && input.touchJoystickActive;\n      const looking = input.touchMode\n        ? (input.touchLookActive && !mobileJoystickCameraLock)\n        : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);"""
+          if old_base not in s:
+            raise SystemExit('camera base/look block not found')
+          s = s.replace(old_base, new_base, 1)
+
+          old_orbit = """      if (looking) {\n        shipTouchCamYaw -= input.mouseDX * 0.003;\n        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));\n      }\n\n      if (arrowLooking) {\n        shipTouchCamYaw += arrowYaw * 1.8 * dt;\n        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));\n      }\n\n      if (!looking && !arrowLooking) {\n        shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);\n        shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);\n      }"""
+          new_orbit = """      if (mobileJoystickCameraLock) {\n        // While the left stick is held, the camera offset is forced dead-behind.\n        // This is a diagnostic/control test: joystick moves ship, not camera.\n        shipTouchCamYaw = 0;\n        shipTouchCamPitch = 0;\n      } else {\n        if (looking) {\n          shipTouchCamYaw -= input.mouseDX * 0.003;\n          shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));\n        }\n\n        if (arrowLooking) {\n          shipTouchCamYaw += arrowYaw * 1.8 * dt;\n          shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));\n        }\n\n        if (!looking && !arrowLooking) {\n          shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);\n          shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);\n        }\n      }"""
+          if old_orbit not in s:
+            raise SystemExit('camera orbit block not found')
+          s = s.replace(old_orbit, new_orbit, 1)
+
+          old_lerp = """  engine.cameraWorldPos.lerp(camPos, Math.min(1, 14 * dt));\n  engine.camera.quaternion.slerp(camQuat, Math.min(1, 14 * dt));"""
+          new_lerp = """  const mobilePilotingChase = input.touchMode && traversal.mode === MODE.PILOTING && chaseCam;\n  if (mobilePilotingChase) {\n    engine.cameraWorldPos.copy(camPos);\n    engine.camera.quaternion.copy(camQuat);\n  } else {\n    engine.cameraWorldPos.lerp(camPos, Math.min(1, 14 * dt));\n    engine.camera.quaternion.slerp(camQuat, Math.min(1, 14 * dt));\n  }"""
+          if old_lerp not in s:
+            raise SystemExit('camera lerp block not found')
+          s = s.replace(old_lerp, new_lerp, 1)
+
+          wf = Path('.github/workflows/vex-mobile-locked-chase.yml')
+          if wf.exists():
+            wf.unlink()
+          p.write_text(s)
+          PY
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Commit test patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main.js .github/workflows/vex-mobile-locked-chase.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Test locked mobile chase camera"
+          git push origin HEAD:main
+
+# trigger: mobile locked chase test
