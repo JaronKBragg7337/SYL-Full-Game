@@ -257,6 +257,9 @@ const _cv = new THREE.Vector3(), _cq = new THREE.Quaternion(), _cm = new THREE.M
 let shipTouchCamYaw = 0, shipTouchCamPitch = 0;
 let shipCamBaseReady = false;
 const shipCamBaseQuat = new THREE.Quaternion();
+const SHIP_CAM_MIN_TRAVEL_SPEED = 1.5;
+const _shipCamUp = new THREE.Vector3(), _shipCamTravel = new THREE.Vector3(), _shipCamRight = new THREE.Vector3();
+const _shipCamMatrix = new THREE.Matrix4();
 
 function updateCamera(dt) {
   if (traversal.mode === MODE.ON_FOOT) {
@@ -272,45 +275,48 @@ function updateCamera(dt) {
       // direction changed under a fixed view — the "ship has no front" bug.)
       // Mouse / outside-the-stick drag adds a TEMPORARY orbit offset that
       // eases back to dead-behind when released. Never re-add a steering hold.
+      // Velocity-follow chase camera test:
+      // Movement input changes the ship/velocity; the camera follows the
+      // resulting travel direction instead of raw yaw input. When nearly
+      // stationary, keep the previous camera base so A/D or stick-side does
+      // not directly orbit the camera in place.
       _cv.set(0, 4.5, -15);
+      const camUp = upAt(dominantBody(BODIES, ship.worldPos), ship.worldPos, _shipCamUp);
+      const travel = _shipCamTravel.copy(ship.velocity).addScaledVector(camUp, -ship.velocity.dot(camUp));
       if (!shipCamBaseReady) {
         shipCamBaseQuat.copy(ship.quaternion);
         shipCamBaseReady = true;
-      } else if (input.touchMode) {
-        // Mobile test: lock the chase-camera base directly to the ship nose.
-        // This removes follow-lag so the left stick cannot feel like camera orbit.
-        shipCamBaseQuat.copy(ship.quaternion);
-      } else {
-        shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));
       }
-      const mobileJoystickCameraLock = input.touchMode && input.touchJoystickActive;
+      if (travel.lengthSq() > SHIP_CAM_MIN_TRAVEL_SPEED * SHIP_CAM_MIN_TRAVEL_SPEED) {
+        travel.normalize();
+        _shipCamRight.crossVectors(camUp, travel);
+        if (_shipCamRight.lengthSq() > 1e-6) {
+          _shipCamRight.normalize();
+          _shipCamMatrix.makeBasis(_shipCamRight, camUp, travel);
+          _cq.setFromRotationMatrix(_shipCamMatrix);
+          shipCamBaseQuat.slerp(_cq, Math.min(1, 5 * dt));
+        }
+      }
       const looking = input.touchMode
-        ? (input.touchLookActive && !mobileJoystickCameraLock)
+        ? (input.touchLookActive && !input.touchJoystickActive)
         : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);
       const arrowYaw = (input.down('ArrowRight') ? 1 : 0) - (input.down('ArrowLeft') ? 1 : 0);
       const arrowPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);
       const arrowLooking = arrowYaw !== 0 || arrowPitch !== 0;
 
-      if (mobileJoystickCameraLock) {
-        // While the left stick is held, the camera offset is forced dead-behind.
-        // This is a diagnostic/control test: joystick moves ship, not camera.
-        shipTouchCamYaw = 0;
-        shipTouchCamPitch = 0;
-      } else {
-        if (looking) {
-          shipTouchCamYaw -= input.mouseDX * 0.003;
-          shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));
-        }
+      if (looking) {
+        shipTouchCamYaw -= input.mouseDX * 0.003;
+        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));
+      }
 
-        if (arrowLooking) {
-          shipTouchCamYaw += arrowYaw * 1.8 * dt;
-          shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));
-        }
+      if (arrowLooking) {
+        shipTouchCamYaw += arrowYaw * 1.8 * dt;
+        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));
+      }
 
-        if (!looking && !arrowLooking) {
-          shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);
-          shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);
-        }
+      if (!looking && !arrowLooking) {
+        shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);
+        shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);
       }
       _cv.applyAxisAngle(_touchCamX, shipTouchCamPitch);
       _cv.applyAxisAngle(_touchCamY, shipTouchCamYaw);
@@ -326,14 +332,8 @@ function updateCamera(dt) {
       camQuat.multiply(_flipY);
     }
   }
-  const mobilePilotingChase = input.touchMode && traversal.mode === MODE.PILOTING && chaseCam;
-  if (mobilePilotingChase) {
-    engine.cameraWorldPos.copy(camPos);
-    engine.camera.quaternion.copy(camQuat);
-  } else {
-    engine.cameraWorldPos.lerp(camPos, Math.min(1, 14 * dt));
-    engine.camera.quaternion.slerp(camQuat, Math.min(1, 14 * dt));
-  }
+  engine.cameraWorldPos.lerp(camPos, Math.min(1, 14 * dt));
+  engine.camera.quaternion.slerp(camQuat, Math.min(1, 14 * dt));
 }
 const _cq2v = new THREE.Vector3();
 const _touchCamX = new THREE.Vector3(1, 0, 0);
