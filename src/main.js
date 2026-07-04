@@ -280,7 +280,7 @@ function updateCamera(dt) {
         shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));
       }
       const looking = input.touchMode
-        ? input.touchLookActive
+        ? (input.touchLookActive && !input.touchJoystickActive)
         : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);
       const arrowYaw = (input.down('ArrowRight') ? 1 : 0) - (input.down('ArrowLeft') ? 1 : 0);
       const arrowPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);
