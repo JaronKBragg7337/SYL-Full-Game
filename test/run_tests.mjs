@@ -369,6 +369,24 @@ console.log('\n== 8. Turning (yaw authority) ==');
   t.throttle = 0;
   t.fuel = 100;
   t.stats.ready = true;
+  const ctl = { pitch: 0, yaw: 1, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: 0 };
+  const dt = 1 / 60;
+  const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
+  const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  check('assisted yaw turns ship nose without inventing sideways travel',
+    startFwd.dot(endFwd) < 0.2 && t.velocity.length() < 0.5,
+    `dot=${startFwd.dot(endFwd).toFixed(2)} speed=${t.velocity.length().toFixed(2)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  t.worldPos.set(0, earth.radius + 200, 0);
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.throttle = 0;
+  t.fuel = 100;
+  t.stats.ready = true;
   const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: -1 };
   const dt = 1 / 60;
   for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);

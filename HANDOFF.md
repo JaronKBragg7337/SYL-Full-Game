@@ -16,6 +16,29 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Assisted ship flight now uses nose-first thrust
+
+**State:** Jaron clarified the remaining issue: the ship felt like it had no
+front. Left/right changed the direction of travel but did not feel like the
+glass/front of the hull was turning.
+
+**Shipped:** changed assisted ship flight in `src/ship/ship.js` from direct
+target-velocity steering to vehicle-style control: yaw rotates the ship body,
+then throttle/reverse/lift applies acceleration through the ship's actual
+front/up axes. Added a regression test proving yaw-only input turns the nose
+without creating sideways travel.
+
+**Verified:** `npm test` 72/72.
+
+**Next up:** Jaron retests on desktop and phone. Expected feel: A/D or analog
+left/right rotates the hull/front; W/stick up pushes through that front; no
+throttle means turn-in-place rather than sliding in a new direction.
+
+**Gotchas:** this keeps the arcade hover/damping for phone friendliness. It is
+not yet full Newtonian 6DOF inertia.
+
+---
+
 ## 2026-07-04 — Codex — Ship steering no longer drags chase camera
 
 **State:** Jaron confirmed the joystick/button bubbling fix was not enough:

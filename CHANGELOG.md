@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.2.18 — 2026-07-04 — Assisted ship flight now has a real nose/front (Builder: Codex)
+- Reworked assisted ship piloting from direct travel-vector steering to a
+  vehicle-style model: yaw rotates the hull/front, and throttle accelerates
+  through that front.
+- This follows the common flight-game split of torque/steering vs force/thrust:
+  left/right no longer invents sideways travel by itself.
+- Added a regression test proving yaw-only input turns the ship nose without
+  creating sideways velocity.
+
 ## 0.2.17 — 2026-07-04 — Ship steering no longer drags chase camera orbit (Builder: Codex)
 - Changed chase camera anchoring while piloting: WASD/mobile ship steering now
   holds the current camera anchor instead of applying every ship yaw directly to
