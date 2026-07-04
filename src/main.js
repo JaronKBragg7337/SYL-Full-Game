@@ -276,7 +276,7 @@ function updateCamera(dt) {
       if (!shipCamBaseReady) {
         shipCamBaseQuat.copy(ship.quaternion);
         shipCamBaseReady = true;
-      } else if (!input.touchMode) {
+      } else {
         shipCamBaseQuat.slerp(ship.quaternion, Math.min(1, 10 * dt));
       }
       const looking = input.touchMode
