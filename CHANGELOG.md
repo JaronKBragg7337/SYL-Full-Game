@@ -1,5 +1,13 @@
 # CHANGELOG.md
 
+## 0.2.16 — 2026-07-04 — Mobile joystick no longer leaks into ship camera look (Builder: Codex)
+- Added explicit touch joystick active state and stopped joystick/button touch
+  events from bubbling into the global touch-look handler.
+- This mirrors the Unreal pilot-input rule: vehicle-control touches steer the
+  ship, while camera look only comes from touches outside the analog/buttons.
+- This should reduce the "analog stick is still orbiting the ship camera" feel
+  on mobile browsers.
+
 ## 0.2.15 — 2026-07-04 — Code-built Fortis walkable gunship visual (Builder: Codex)
 - Ported the `SpaceYouLand/_authoring/make_walkable_gunship.py` layout into a
   mobile-safe Three.js primitive silhouette instead of shipping raw FBX/Blender:

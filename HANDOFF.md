@@ -16,6 +16,28 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Touch joystick/camera event split hardened
+
+**State:** after the Fortis visual port, Jaron's remaining feel issue is that
+the analog stick can still seem to orbit the camera instead of only steering
+the ship.
+
+**Shipped:** added `input.touchJoystickActive` and stopped joystick/button touch
+events from bubbling into the global touch-look listener. This follows the
+Unreal pilot rule: vehicle-control input belongs to the ship, and look input
+only comes from touches outside the control surfaces.
+
+**Verified:** run tests/smoke before public sync.
+
+**Next up:** if Jaron still feels camera drift on phone, add an on-screen
+camera-lock indicator and log active touch ids in dev mode to catch a browser-
+specific multitouch edge case.
+
+**Gotchas:** this is event routing, not a physics rewrite. It keeps the
+dev-fly-style assisted ship movement from `0.2.14`.
+
+---
+
 ## 2026-07-04 — Codex — Code-built Fortis gunship visual
 
 **State:** working on `main`. This is the first browser/mobile-safe port of
