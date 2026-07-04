@@ -282,10 +282,21 @@ function updateCamera(dt) {
       const looking = input.touchMode
         ? input.touchLookActive
         : (input.pointerLocked && Math.abs(input.mouseDX) + Math.abs(input.mouseDY) > 0);
+      const arrowYaw = (input.down('ArrowRight') ? 1 : 0) - (input.down('ArrowLeft') ? 1 : 0);
+      const arrowPitch = (input.down('ArrowDown') ? 1 : 0) - (input.down('ArrowUp') ? 1 : 0);
+      const arrowLooking = arrowYaw !== 0 || arrowPitch !== 0;
+
       if (looking) {
         shipTouchCamYaw -= input.mouseDX * 0.003;
         shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch - input.mouseDY * 0.003));
-      } else {
+      }
+
+      if (arrowLooking) {
+        shipTouchCamYaw += arrowYaw * 1.8 * dt;
+        shipTouchCamPitch = Math.max(-0.75, Math.min(0.55, shipTouchCamPitch + arrowPitch * 1.2 * dt));
+      }
+
+      if (!looking && !arrowLooking) {
         shipTouchCamYaw += (0 - shipTouchCamYaw) * Math.min(1, 4 * dt);
         shipTouchCamPitch += (0 - shipTouchCamPitch) * Math.min(1, 4 * dt);
       }
@@ -325,9 +336,11 @@ function readShipControls(dt) {
   ship.throttle = Math.max(0, assistForward);
 
   const keyYaw = (input.down('KeyD') ? 1 : 0) - (input.down('KeyA') ? 1 : 0);
+  const keyRoll = (input.down('KeyR') ? 1 : 0) - (input.down('KeyQ') ? 1 : 0);
+
   controls.pitch = 0;
   controls.yaw = input.touchMode ? (input.touchShipYaw || 0) : keyYaw;
-  controls.roll = 0;
+  controls.roll = input.touchMode ? 0 : keyRoll;
   controls.thrustUp = input.down('Space');
   controls.brake = input.down('KeyX') || input.down('ControlLeft') || input.down('ControlRight') || touchThrottle < -0.85;
   controls.assist = true;

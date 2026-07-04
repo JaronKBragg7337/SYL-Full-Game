@@ -64,6 +64,7 @@ export class Ship {
     this.landed = true;
     this.gearDown = true;
     this.throttle = 0;      // 0..1 main thrust setting
+    this.assistRoll = 0;    // assisted-mode bank angle; upright rebuild would otherwise erase Q/R roll
 
     this.stats = this.computeStats();
 
@@ -254,6 +255,16 @@ export class Ship {
       _mobileRight.crossVectors(up, fwdFlat).normalize();
       _mobileMatrix.makeBasis(_mobileRight, up, fwdFlat);
       this.quaternion.setFromRotationMatrix(_mobileMatrix);
+
+      // Assisted mode keeps the ship planet-upright for phone-friendly flying,
+      // so Q/R roll needs a stored bank angle applied after the upright basis rebuild.
+      this.assistRoll = (this.assistRoll || 0) + (controls.roll || 0) * ROLL_RATE * dt;
+      this.assistRoll *= Math.max(0, 1 - 1.5 * dt);
+      if (Math.abs(this.assistRoll) > 0.001) {
+        _q.setFromAxisAngle(fwdFlat, this.assistRoll);
+        this.quaternion.premultiply(_q).normalize();
+      }
+
       this.angVel.set(0, 0, 0);
 
       if (this.stats.ready && this.fuel > 0) {
