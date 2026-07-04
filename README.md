@@ -52,11 +52,11 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 ## Controls
 
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
-Ship: **W/S** forward/reverse · **A/D** turn · **mouse** camera orbit ·
+Ship: **W/S** forward/reverse · **A/D** strafe · **mouse/arrows** camera orbit ·
 **Space** climb · **X/Ctrl** brake · **G** gear · **C** camera · **E** exit (landed)
-Touch ship: left stick becomes **FLY** for forward/reverse + left/right turn;
-**LIFT** takes off/climbs; **BRAKE** slows/stops. Mouse/touch look changes the
-camera only, not ship steering.
+Touch ship: left stick drives forward/reverse and strafes left/right;
+**LIFT** takes off/climbs; **BRAKE** slows/stops. Mouse/right-side touch look
+changes the camera only, not ship steering.
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
