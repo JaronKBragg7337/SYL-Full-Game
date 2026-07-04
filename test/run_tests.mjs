@@ -350,6 +350,10 @@ console.log('\n== 8. Turning (yaw authority) ==');
     `dot=${startFwd.dot(endFwd).toFixed(2)}`);
   check('mobile assist main thrust creates horizontal travel', Math.abs(t.velocity.z) + Math.abs(t.velocity.x) > 5,
     `velocity=${t.velocity.toArray().map(v => v.toFixed(1)).join(',')}`);
+  ctl.yaw = 0; ctl.thrustUp = false; t.throttle = 0;
+  for (let i = 0; i < 60; i++) t.tick(dt, true, ctl);
+  check('mobile assist steadies when controls released', t.velocity.length() < 1.2,
+    `speed=${t.velocity.length().toFixed(2)}`);
 }
 
 console.log('\n== 9. Dev editor tools ==');

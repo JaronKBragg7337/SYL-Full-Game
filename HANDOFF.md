@@ -16,6 +16,31 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-04 — Codex — Dev-fly feel for mobile ship
+
+**State:** working on `main` after Jaron clarified dev fly mode feels correct:
+the ship should use that direct free-roam feel, with the analog stick controlling
+only the ship and camera look only from touches outside the stick circle.
+
+**Shipped:** touch joystick ids are now excluded from the look map, even if the
+finger drifts outside the circle. Mobile ship steering no longer consumes
+touch-look `mouseDX/mouseDY`; outside-drag controls only a chase-camera orbit.
+When no outside look touch is active, the chase camera recenters behind the
+ship. Mobile ship assist is now dev-fly-like direct hover movement: stick
+forward/reverse drives real ship velocity, LIFT climbs, BRAKE slows, and
+release steadies instead of falling immediately. Desktop 6DOF remains unchanged.
+
+**Verified:** run tests/smoke before public sync.
+
+**Next up:** Jaron phone retest: use only the FLY circle and confirm the camera
+stays locked behind; then drag outside the circle and confirm only camera angle
+free-looks.
+
+**Gotchas:** this deliberately prioritizes mobile feel over realism. Keep
+advanced flight for a later explicit toggle.
+
+---
+
 ## 2026-07-04 — Codex — Mobile ship heading assist
 
 **State:** working on `main` after Jaron reported the calmer controls still

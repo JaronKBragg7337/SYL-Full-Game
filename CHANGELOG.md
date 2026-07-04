@@ -1,5 +1,16 @@
 # CHANGELOG.md
 
+## 0.2.13 — 2026-07-04 — Dev-fly feel for mobile ship controls (Builder: Codex)
+- Split mobile ship stick input from mobile camera look: the joystick touch id
+  can no longer feed touch-look, and ship steering no longer reads touch
+  `mouseDX/mouseDY`.
+- Added a touch chase-camera orbit: camera stays locked behind the ship during
+  stick-only flight, while a separate touch outside the joystick temporarily
+  free-looks the camera.
+- Changed touch mobile ship assist to dev-fly-like direct hover movement:
+  stick forward/reverse drives the actual ship, LIFT climbs, BRAKE slows, and
+  releasing controls steadies the ship instead of falling immediately.
+
 ## 0.2.12 — 2026-07-04 — Mobile flight changes actual travel direction (Builder: Codex)
 - Added a mobile flight-assist path in `ship.js`: touch piloting now steers the
   ship's real travel heading directly, keeps the hull upright relative to the
