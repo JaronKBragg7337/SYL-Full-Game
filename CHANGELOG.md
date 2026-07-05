@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 2026-07-05 — Mobile attitude stick speed tuning (Builder: Codex)
+- Reduced right ATTITUDE stick bank/pitch output so mobile bank left/right no
+  longer spins the ship too quickly, especially with maneuvering-thruster torque
+  installed.
+- Added curved response and axis intent filtering: mostly-horizontal movement
+  banks only, mostly-vertical movement pitches only, and diagonals are softened
+  so thumb drift does not accidentally command both axes at full strength.
+- Added regression checks for capped attitude speed and diagonal filtering.
+
 ## 2026-07-04 — Mobile dual-stick ship attitude (Builder: Codex)
 - Replaced separate mobile BANK and NOSE buttons with a right-side ATTITUDE
   joystick. Horizontal stick motion bank-turns the ship; vertical motion pitches

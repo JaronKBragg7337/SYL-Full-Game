@@ -79,6 +79,19 @@ return {
 };
 ```
 
+The implementation intentionally scales and filters that raw shape:
+
+- `ATT_BANK_SCALE`: full left/right bank strength.
+- `ATT_PITCH_SCALE`: full up/down pitch strength.
+- `ATT_CURVE`: makes small thumb movement gentler.
+- `ATT_AXIS_LOCK`: chooses the dominant axis so near-horizontal movement does
+  not accidentally pitch, and near-vertical movement does not accidentally bank.
+- `ATT_DIAGONAL_SOFTEN`: allows intentional diagonals, but at reduced strength.
+
+Keep those constants in `src/ui/touch.js` for mobile feel tuning. Do not lower
+global ship torque just to make the phone stick slower, because that also
+changes PC controls and non-touch flight.
+
 ### Keyboard-To-Ship Routing
 
 File: `src/main.js`

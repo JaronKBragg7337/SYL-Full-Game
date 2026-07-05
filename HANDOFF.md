@@ -16,6 +16,31 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Codex — Mobile right-stick bank/pitch tuned down
+
+**State:** working in tests. Jaron confirmed the dual-stick layout, then said
+right-stick bank left/right was too fast and diagonal thumb drift could trigger
+bank plus nose pitch together.
+
+**Shipped:** tuned `joystickShipAttitude()` in `src/ui/touch.js`: bank is capped
+with `ATT_BANK_SCALE`, pitch with `ATT_PITCH_SCALE`, small movement is curved by
+`ATT_CURVE`, dominant horizontal/vertical intent locks out the weaker axis, and
+intentional diagonals are softened by `ATT_DIAGONAL_SOFTEN`. Added explicit
+`touchShipBank` reset state in `Input`.
+
+**Verified:** `npm test` passes with 89/89 checks, including capped attitude
+speed and softened diagonal thumb drift.
+
+**Next up:** phone-test the exact feel. If bank is still too fast, lower
+`ATT_BANK_SCALE`; if pitch is too fast, lower `ATT_PITCH_SCALE`; if diagonal
+drift still feels finicky, raise `ATT_AXIS_LOCK` or lower
+`ATT_DIAGONAL_SOFTEN`.
+
+**Gotchas:** These constants deliberately live in mobile touch mapping so PC
+Q/R and arrow-key controls keep their existing responsiveness.
+
+---
+
 ## 2026-07-04 — Codex — Mobile ship controls use dual sticks
 
 **State:** working in tests. Jaron said the flight controls felt right, but

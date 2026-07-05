@@ -150,15 +150,23 @@ console.log('\n== 3. Controls and local playability ==');
   const up = joystickAxes(0, -radius, radius);
   const move = joystickMoveKeys(0, -radius, radius);
   const shipStick = joystickShipControls(radius, -radius, radius);
-  const attitudeStick = joystickShipAttitude(radius, -radius, radius);
+  const attitudeRight = joystickShipAttitude(radius, 0, radius);
+  const attitudeUp = joystickShipAttitude(0, -radius, radius);
+  const attitudeDiag = joystickShipAttitude(radius, -radius, radius);
+  const attitudeNearHorizontal = joystickShipAttitude(radius, -radius * 0.35, radius);
   check('touch joystick exposes normalized axes', right.x > 0.99 && up.y < -0.99);
   check('touch joystick still maps to WASD on foot', move.forward && !move.back);
   check('touch joystick produces ship side-axis + throttle while piloting',
     shipStick.yaw > 0.45 && shipStick.throttle > 0.65 && shipStick.pitch === 0,
     `side=${shipStick.yaw.toFixed(2)} throttle=${shipStick.throttle.toFixed(2)} pitch=${shipStick.pitch.toFixed(2)}`);
-  check('right attitude stick maps to bank + nose pitch',
-    attitudeStick.bank > 0.7 && attitudeStick.pitch < -0.7,
-    `bank=${attitudeStick.bank.toFixed(2)} pitch=${attitudeStick.pitch.toFixed(2)}`);
+  check('right attitude stick uses gentle capped bank/pitch speeds',
+    attitudeRight.bank > 0.30 && attitudeRight.bank < 0.34 && attitudeRight.pitch === 0 &&
+    attitudeUp.pitch < -0.40 && attitudeUp.pitch > -0.44 && attitudeUp.bank === 0,
+    `right=${attitudeRight.bank.toFixed(2)}/${attitudeRight.pitch.toFixed(2)} up=${attitudeUp.bank.toFixed(2)}/${attitudeUp.pitch.toFixed(2)}`);
+  check('right attitude stick softens diagonal thumb drift',
+    Math.abs(attitudeDiag.bank) < 0.13 && Math.abs(attitudeDiag.pitch) < 0.16 &&
+    attitudeNearHorizontal.pitch === 0,
+    `diag=${attitudeDiag.bank.toFixed(2)}/${attitudeDiag.pitch.toFixed(2)} near=${attitudeNearHorizontal.bank.toFixed(2)}/${attitudeNearHorizontal.pitch.toFixed(2)}`);
 }
 {
   const player = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);

@@ -55,10 +55,10 @@ On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F*
 Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **↑/↓** nose pitch in high flight · **Z** descend ·
 locked forward chase camera · **Space** climb · **X/Ctrl** brake · **G** gear ·
 **C** cockpit/chase camera · **E** exit (landed)
-Touch ship: left stick lifts/drives/strafes; right **ATTITUDE** stick banks and
-pitches the ship once safely airborne; **DESCEND** overrides lift so you can
-guide the ship down. Ship chase camera is locked behind/above the nose so turns
-stay readable.
+Touch ship: left stick lifts/drives/strafes; right **ATTITUDE** stick gently
+banks and pitches the ship with diagonal drift filtering; **DESCEND** overrides
+lift so you can guide the ship down. Ship chase camera is locked behind/above
+the nose so turns stay readable.
 Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
