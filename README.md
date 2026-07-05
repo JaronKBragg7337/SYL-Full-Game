@@ -49,15 +49,19 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 5. Open the body map (**M**), burn toward the **Moon** (or **Rustholm**), brake with
    **X** on approach, descend, and land gently (under ~16 m/s or you damage modules).
 6. Landing at a marked zone **discovers** it — faction contact, salvage reward, autosave.
-7. Additional bodies/zones carry test crates with
+7. If you do not want to fly, walk to a civil terminal and press **E** to board
+   the automated public transport. It rides a visible ship between Earth, Moon,
+   Aethelgard, Pyrrhus, Veldora, Dunewind, and Rustholm, then lets you
+   disembark at each base.
+8. Additional bodies/zones carry test crates with
    expanded resources and ship parts.
-8. Open **I** for inventory and crafting. Crafting is intentionally simple:
+9. Open **I** for inventory and crafting. Crafting is intentionally simple:
    buttons are enabled only when the carried inputs are present.
-9. **F5** saves, **F9** loads, autosave every 60 s.
+10. **F5** saves, **F9** loads, autosave every 60 s.
 
 ## Controls
 
-On foot: **WASD** move · **Shift** run · **Space** jump · **E** board · **F** gather
+On foot: **WASD** move · **Shift** run · **Space** jump · **E** board ship / board or exit civil transport · **F** gather
 Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **↑/↓** nose pitch in high flight · **Z** descend ·
 locked forward chase camera · **Space** climb · **X/Ctrl** brake · **G** gear ·
 **C** cockpit/chase camera · **E** exit (landed)
@@ -65,7 +69,7 @@ Touch ship: left stick lifts/drives/strafes; right **ATTITUDE** stick gently
 banks and pitches the ship with diagonal drift filtering; **DESCEND** overrides
 lift so you can guide the ship down. Ship chase camera is locked behind/above
 the nose so turns stay readable.
-Panels: **B** ship builder · **I** inventory · **M** bodies · **H** help ·
+Panels: **B** ship builder · **I** inventory · **M** bodies + civil transport line · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
 Builder/dev tools: add `?dev=1` to the URL to reveal the **DEV** button. It can
@@ -77,7 +81,7 @@ heavy external assets are required.
 ## Verify it works
 
 ```
-npm test        # 95 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, registries, crafting, dev tools, desktop coexistence
+npm test        # 102 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, civil transport, registries, crafting, dev tools, desktop coexistence
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -92,6 +96,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Planet/body **data registry** | `src/world/bodies.js` |
 | Kimi expanded body registry | `src/world/bodies_expanded.js` |
 | Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
+| Civil transport route + rideable public ship | `src/world/civilTransport.js` |
 | World progress state | `src/world/worldState.js` |
 | Pickup placement | `src/world/pickups.js` |
 | Surface⇄space **state machine** | `src/world/traversal.js` |

@@ -239,6 +239,14 @@ export function structureCollidersForZone(zone) {
       { kind: 'circle', east: 0, north: 0, radius: 2, height: 13 },
     ];
   }
+  if (zone.structures === 'transit') {
+    return [
+      { kind: 'box', east: -20, north: 4, halfEast: 15, halfNorth: 7, height: 8 },
+      { kind: 'box', east: 20, north: -5, halfEast: 11, halfNorth: 6, height: 7 },
+      { kind: 'circle', east: 0, north: 24, radius: 3.5, height: 18 },
+      { kind: 'circle', east: 0, north: -24, radius: 3.5, height: 18 },
+    ];
+  }
   return [];
 }
 
@@ -507,6 +515,33 @@ function buildZoneStructures(body, zone, factionById) {
     );
     placeOnSurface(body, zone._dirV, light, 12.6);
     g.add(light);
+  } else if (zone.structures === 'transit') {
+    const steel = new THREE.MeshLambertMaterial({ color: 0x546e7a });
+    const dark = new THREE.MeshLambertMaterial({ color: 0x1f2a30 });
+    const glass = new THREE.MeshLambertMaterial({ color: 0x8fd7ff, transparent: true, opacity: 0.42 });
+    const signal = new THREE.MeshBasicMaterial({ color: fColor });
+    const terminal = new THREE.Mesh(new THREE.BoxGeometry(28, 8, 12), steel);
+    placeOnSurface(body, offsetDir(zone._dirV, -20, 4, body), terminal, 4);
+    g.add(terminal);
+    const concourse = new THREE.Mesh(new THREE.BoxGeometry(18, 6, 10), dark);
+    placeOnSurface(body, offsetDir(zone._dirV, 20, -5, body), concourse, 3);
+    g.add(concourse);
+    const windows = new THREE.Mesh(new THREE.BoxGeometry(24, 2, 0.4), glass);
+    placeOnSurface(body, offsetDir(zone._dirV, -20, 10.3, body), windows, 7);
+    g.add(windows);
+    for (const north of [24, -24]) {
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.8, 16, 8), steel);
+      const d = offsetDir(zone._dirV, 0, north, body);
+      placeOnSurface(body, d, mast, 8);
+      g.add(mast);
+      const light = new THREE.Mesh(new THREE.SphereGeometry(1.2, 10, 8), signal);
+      placeOnSurface(body, d, light, 17);
+      g.add(light);
+    }
+    const gate = new THREE.Mesh(new THREE.TorusGeometry(8, 0.28, 8, 32), signal);
+    placeOnSurface(body, offsetDir(zone._dirV, 0, 0, body), gate, 2.6);
+    gate.rotateX(Math.PI / 2);
+    g.add(gate);
   }
   return g;
 }

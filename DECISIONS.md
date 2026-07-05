@@ -62,18 +62,24 @@ file and HANDOFF.md. Numbered for reference from other docs.
     needs interior volumes riding the ship's frame — architecture note: model
     interiors as a local frame parented to the ship entity, players integrate
     within it (M4).
+19. **Civil transport is a continuous scripted public service.** It is not a
+    teleport: the carrier has f64 `worldPos`, a visible tracked mesh, passenger
+    camera, and moves continuously between real landing zones. APPROXIMATION:
+    route timing is deterministic and client-local, not a server economy /
+    timetable yet. REPLACEMENT: persistent faction transit schedules, fares,
+    traffic ownership, and server-authoritative public carriers in M5.
 
 ## Process decisions
 
-19. **Clean repo, not a fork.** fable-survival stays the deployment/docs model;
+20. **Clean repo, not a fork.** fable-survival stays the deployment/docs model;
     SpaceYouLand stays the Unreal canon lane; Kurearthis stays the physics-proof
     lane. This repo distills all three into one runnable foundation.
-20. **Vendored three.js r160, no bundler.** Zero-install, offline-capable,
+21. **Vendored three.js r160, no bundler.** Zero-install, offline-capable,
     instant boot. Revisit only when module count hurts (fable-survival's Vite
     config is the pattern).
-21. **MIT license, public-repo hygiene**: no secrets, no personal data, tokens
+22. **MIT license, public-repo hygiene**: no secrets, no personal data, tokens
     never committed.
-22. **Desktop fidelity route coexists with mobile.** `index.html` remains the
+23. **Desktop fidelity route coexists with mobile.** `index.html` remains the
     public phone-safe build. `desktop.html` uses cloned/scaled body data,
     desktop-only GLB assets, PBR materials, shadows, and post-processing while
     reusing floating origin, traversal, registries, custom integrators, and

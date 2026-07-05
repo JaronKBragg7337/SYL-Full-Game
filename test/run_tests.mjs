@@ -44,6 +44,7 @@ const { installPart, repairPart, removePart, loadFuel, applyStarterDamage, readi
 const { Inventory } = await import('../src/inventory/inventory.js');
 const { FactionState, FACTIONS } = await import('../src/factions/factions.js');
 const { WorldState } = await import('../src/world/worldState.js');
+const { CivilTransport, CIVIL_TRANSPORT_STOPS } = await import('../src/world/civilTransport.js');
 const { ITEMS, getItem } = await import('../src/items/items.js');
 const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recipes.js');
 const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
@@ -88,6 +89,12 @@ check('pickups reference real zones/items', PICKUPS.every(p => {
   const body = BODIES.find(b => b.id === p.bodyId);
   return body?.landingZones.some(z => z.id === p.zoneId) && !!getItem(p.itemId);
 }));
+check('civil transport stops reference real transit bases', CIVIL_TRANSPORT_STOPS.length >= 5 &&
+  CIVIL_TRANSPORT_STOPS.every((stop) => {
+    const body = BODIES.find(b => b.id === stop.bodyId);
+    const zone = body?.landingZones.find(z => z.id === stop.zoneId);
+    return body && zone && zone.structures === 'transit';
+  }));
 {
   const indexHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
   const desktopHtml = readFileSync(join(ROOT, 'desktop.html'), 'utf8');
@@ -210,6 +217,38 @@ console.log('\n== 3. Controls and local playability ==');
     JSON.stringify(counts));
   check('near-base pickups include flight-test fuel surplus', (counts.fuel_hydrazine || 0) >= 6,
     JSON.stringify(counts));
+}
+
+console.log('\n== 3b. Civil transport line ==');
+{
+  const transport = new CivilTransport(stubEngine, BODIES, { legSeconds: 2.5, dwellSeconds: 0.1 });
+  const rider = new Player(stubEngine, { mouseDX: 0, mouseDY: 0, down: () => false }, BODIES);
+  rider.placeAt(transport.worldPos.clone().add(new THREE.Vector3(2, 0, 0)));
+  const startStop = transport.currentStop();
+  const startPos = transport.worldPos.clone();
+  check('civil transport starts docked at Earth terminal',
+    transport.isDocked() && startStop.bodyId === 'earth' && startStop.zone.structures === 'transit');
+  check('player can board docked civil transport', transport.canBoard(rider) && transport.board(rider) && transport.passenger);
+  transport.tick(0.2, rider); // leave dwell and begin moving
+  let maxStep = 0;
+  let last = transport.worldPos.clone();
+  for (let i = 0; i < 155; i++) {
+    transport.tick(1 / 60, rider);
+    maxStep = Math.max(maxStep, transport.worldPos.distanceTo(last));
+    last.copy(transport.worldPos);
+  }
+  check('civil transport moves continuously from stop to stop',
+    transport.worldPos.distanceTo(startPos) > 100 && maxStep < 900,
+    `moved=${transport.worldPos.distanceTo(startPos).toFixed(1)} maxStep=${maxStep.toFixed(1)}`);
+  check('passenger rides with civil transport',
+    rider.worldPos.distanceTo(transport.worldPos) < 10,
+    `dist=${rider.worldPos.distanceTo(transport.worldPos).toFixed(1)}`);
+  check('civil transport reaches next planetary base',
+    transport.isDocked() && transport.currentStop().bodyId === 'moon',
+    `stop=${transport.currentStop().label}`);
+  check('passenger can disembark at destination base',
+    transport.disembark(rider) && !transport.passenger &&
+    rider.worldPos.distanceTo(zoneWorldPos(transport.currentStop().body, transport.currentStop().zone, 0.4)) < 25);
 }
 
 console.log('\n== 4. Modular ship: damage → gather → repair → ready ==');

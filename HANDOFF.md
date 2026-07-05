@@ -16,6 +16,42 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Codex — Civil transport line and transit bases
+
+**State:** working locally; ready for commit and live-site sync after final diff
+review. Public/mobile `index.html` and desktop `desktop.html` both wire the
+same civil transport system.
+
+**Shipped:** added `src/world/civilTransport.js`, a seven-stop public passenger
+line, and a visible Fortis-style civil carrier. Players can board at a transit
+terminal, ride the carrier as it moves continuously between real planetary
+landing zones, and disembark after docking. Added transit-base landing zones on
+Earth, Moon, Aethelgard, Pyrrhus, Veldora, Dunewind, and Rustholm, plus
+`structures: 'transit'` visuals/colliders in `src/world/planet.js`. The map
+panel now lists the civil route and current/next stop. Save/autosave is guarded
+while riding so a player does not reload stranded in space as an on-foot body.
+
+**Verified:** baseline before changes was `npm test` 95/95. After changes,
+`npm test` passes 102/102, including new civil transport stop/ride/disembark
+tests. Syntax checks passed for edited runtime/test modules. Local browser
+smoke on `http://127.0.0.1:8377/` and `/desktop.html`: `window.game` boots,
+`civilTransport` exists, route count is 7, first stop is Earth, next stop is
+Moon, forced boarding sets passenger mode, prompt shows the Moon destination,
+passenger stays attached to the carrier, and the carrier moves away from the
+terminal. Real `M` key map panel shows the CIVIL TRANSPORT LINE with Earth
+active and Moon next. Screenshots reviewed for public and desktop lanes.
+
+**Next up:** commit/push SYL, sync `index.html`, `desktop.html`, `lib/`, `src/`,
+and `assets/` into Heartbeat `games/syl/`, then verify live public and desktop
+routes. After that, the next useful SYL chunk is landing aids or route UX polish
+(timetable countdown, terminal signage, fare/standing hooks).
+
+**Gotchas:** The civil carrier is not a teleport, but it is still a scripted
+client-local service. It does not yet charge fares, obey a server timetable, or
+carry multiple networked players authoritatively. See DECISIONS.md #19.
+
+---
+
 ## 2026-07-05 — Codex — Desktop fidelity route added beside mobile build
 
 **State:** working. The phone-safe `index.html` route still boots

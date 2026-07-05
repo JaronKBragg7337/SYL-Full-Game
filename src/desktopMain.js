@@ -27,6 +27,7 @@ import { UI } from './ui/ui.js';
 import * as SaveSystem from './save/save.js';
 import { PICKUPS } from './world/pickups.js';
 import { DevTools } from './dev/devTools.js';
+import { CivilTransport } from './world/civilTransport.js';
 
 const canvas = document.getElementById('game-canvas');
 const engine = new Engine(canvas, {
@@ -108,9 +109,14 @@ function removePickup(id) {
   pickupEntities.delete(id);
 }
 
+const civilTransport = new CivilTransport(engine, DESKTOP_BODIES, {
+  legSeconds: 95,
+  dwellSeconds: 24,
+});
+
 const game = {
   saveKey: 'syl_desktop_save',
-  engine, input, player, ship, inventory, worldState, factionState, traversal,
+  engine, input, player, ship, civilTransport, inventory, worldState, factionState, traversal,
   pickupsCollected: new Set(),
   applyLoadedMode(mode) {
     traversal.mode = mode === 'PILOTING' ? MODE.PILOTING : MODE.ON_FOOT;
@@ -167,7 +173,23 @@ ship._onCrash = (impact) => {
 
 input.onPress('KeyE', () => {
   if (ui.anyPanelOpen()) return;
+  if (civilTransport.passenger) {
+    if (civilTransport.disembark(player)) {
+      const stop = civilTransport.currentStop();
+      worldState.discoverBody(stop.bodyId);
+      worldState.discoverZone(stop.zoneId);
+      ui.showToast(`Disembarked at ${stop.label}.`, 2600);
+    } else {
+      ui.showToast(`In transit to ${civilTransport.destinationLabel()}. Wait for docking.`, 2400);
+    }
+    return;
+  }
   if (traversal.mode === MODE.ON_FOOT) {
+    if (civilTransport.canBoard(player)) {
+      civilTransport.board(player);
+      ui.showCenter(`BOARDED CIVIL TRANSPORT<br><span class="dim">Next stop: ${civilTransport.destinationLabel()}.</span>`, 4800);
+      return;
+    }
     if (traversal.canEnterShip(player, ship)) traversal.enterShip(player, ship);
   } else if (traversal.canExitShip(ship)) {
     traversal.exitShip(player, ship);
@@ -204,7 +226,13 @@ input.onPress('KeyM', () => ui.togglePanel('map'));
 input.onPress('KeyH', () => ui.toggleHelp());
 input.onPress('Escape', () => ui.closePanels());
 input.onPress('KeyC', () => { chaseCam = !chaseCam; });
-input.onPress('F5', () => ui.showToast(SaveSystem.save(game).msg, 2000));
+input.onPress('F5', () => {
+  if (civilTransport.passenger) {
+    ui.showToast('Wait until the civil transport docks before saving.', 2500);
+    return;
+  }
+  ui.showToast(SaveSystem.save(game).msg, 2000);
+});
 input.onPress('F9', () => ui.showToast(SaveSystem.load(game).msg, 2500));
 
 let chaseCam = true;
@@ -215,7 +243,9 @@ const _shipCamViewUp = new THREE.Vector3(), _shipCamTarget = new THREE.Vector3()
 const _flipY = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
 
 function updateCamera(dt) {
-  if (traversal.mode === MODE.ON_FOOT) {
+  if (civilTransport.passenger) {
+    civilTransport.passengerCameraPose(camPos, camQuat);
+  } else if (traversal.mode === MODE.ON_FOOT) {
     player.cameraPose(camPos, camQuat);
   } else if (chaseCam) {
     const body = dominantBody(DESKTOP_BODIES, ship.worldPos);
@@ -290,7 +320,17 @@ function checkZoneDiscovery() {
 
 function updatePrompt() {
   if (ui.anyPanelOpen()) { ui.hidePrompt(); return; }
+  if (civilTransport.passenger) {
+    ui.showPrompt(civilTransport.isDocked()
+      ? `E - disembark at ${civilTransport.currentStop().label}`
+      : `Riding civil transport -> ${civilTransport.destinationLabel()}`);
+    return;
+  }
   if (traversal.mode === MODE.ON_FOOT) {
+    if (civilTransport.canBoard(player)) {
+      ui.showPrompt(`E - board civil transport -> ${civilTransport.destinationLabel()}`);
+      return;
+    }
     for (const [, e] of pickupEntities) {
       if (player.worldPos.distanceTo(e.worldPos) < 5.5) {
         ui.showPrompt(`F - gather ${getItem(e.itemId).name}`);
@@ -304,6 +344,14 @@ function updatePrompt() {
     return;
   }
   ui.hidePrompt();
+}
+
+function discoverCivilStopIfDocked() {
+  if (!civilTransport.passenger || !civilTransport.isDocked()) return;
+  const stop = civilTransport.currentStop();
+  if (stop.bodyId !== 'earth') worldState.setFlag('landedAway');
+  worldState.discoverBody(stop.bodyId);
+  worldState.discoverZone(stop.zoneId);
 }
 
 function updateSpaceVisibility() {
@@ -321,7 +369,10 @@ function updateSpaceVisibility() {
 let saveTimer = 0;
 engine.addUpdater((dt) => {
   const panelsOpen = ui.anyPanelOpen() || devTools.anyPanelOpen();
-  if (traversal.mode === MODE.PILOTING) {
+  civilTransport.tick(dt, player);
+  if (civilTransport.passenger) {
+    ship.tick(dt, false, null);
+  } else if (traversal.mode === MODE.PILOTING) {
     if (!panelsOpen) readShipControls();
     ship.tick(dt, !panelsOpen, controls);
     player.worldPos.copy(ship.worldPos);
@@ -334,10 +385,14 @@ engine.addUpdater((dt) => {
   updateSpaceVisibility();
   updateCamera(dt);
   checkZoneDiscovery();
+  discoverCivilStopIfDocked();
   updatePrompt();
   ui.refreshHUD();
   saveTimer += dt;
-  if (saveTimer > 60) { saveTimer = 0; SaveSystem.save(game); }
+  if (saveTimer > 60) {
+    saveTimer = 0;
+    if (!civilTransport.passenger) SaveSystem.save(game);
+  }
   input.endFrame();
 });
 

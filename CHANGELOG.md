@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 2026-07-05 — Civil transport line + transit bases (Builder: Codex)
+- Added a rideable automated civil transport ship (`src/world/civilTransport.js`)
+  that moves continuously between planetary bases. Players can board at a
+  terminal, ride as passengers, and disembark after docking instead of piloting
+  their own damaged ship.
+- Added seven transit stops with visible/collidable transit-base structures:
+  Earth, Moon, Aethelgard, Pyrrhus, Veldora, Dunewind, and Rustholm.
+- The body map now lists the civil transport line and marks the current/next
+  stop. Public and desktop routes both wire the system in.
+- Added headless civil-transport route/passenger tests. `npm test` is now
+  102/102.
+
 ## 2026-07-05 — Separate desktop fidelity build (Builder: Codex)
 - Added `desktop.html` and `src/desktopMain.js` as a separate desktop browser
   route. The existing `index.html` / `src/main.js` mobile-safe build is left in
