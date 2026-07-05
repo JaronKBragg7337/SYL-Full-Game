@@ -73,3 +73,8 @@ file and HANDOFF.md. Numbered for reference from other docs.
     config is the pattern).
 21. **MIT license, public-repo hygiene**: no secrets, no personal data, tokens
     never committed.
+22. **Desktop fidelity route coexists with mobile.** `index.html` remains the
+    public phone-safe build. `desktop.html` uses cloned/scaled body data,
+    desktop-only GLB assets, PBR materials, shadows, and post-processing while
+    reusing floating origin, traversal, registries, custom integrators, and
+    save composition. Desktop saves use `syl_desktop_save`, not `syl_save`.

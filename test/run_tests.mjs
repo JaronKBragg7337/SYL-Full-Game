@@ -12,7 +12,7 @@
 // Node can't resolve the bare 'three' specifier without help; setup() writes
 // a tiny node_modules/three shim pointing at the vendored lib. Idempotent.
 // ============================================================================
-import { mkdirSync, writeFileSync, existsSync } from 'fs';
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 
@@ -29,6 +29,7 @@ if (!existsSync(join(shimDir, 'package.json'))) {
 
 const THREE = await import('three');
 const { BODIES, getBody } = await import('../src/world/bodies.js');
+const { DESKTOP_BODIES, DESKTOP_WORLD_SCALE } = await import('../src/desktop/desktopBodies.js');
 const {
   terrainRadiusAt, altitudeAt, gravityAt, upAt, dominantBody, buildBodyVisual,
   zoneWorldPos, resolveStructureCollision, structureCollidersForBody,
@@ -87,6 +88,21 @@ check('pickups reference real zones/items', PICKUPS.every(p => {
   const body = BODIES.find(b => b.id === p.bodyId);
   return body?.landingZones.some(z => z.id === p.zoneId) && !!getItem(p.itemId);
 }));
+{
+  const indexHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
+  const desktopHtml = readFileSync(join(ROOT, 'desktop.html'), 'utf8');
+  check('mobile-safe index still boots src/main.js',
+    indexHtml.includes('src="./src/main.js"') && !indexHtml.includes('desktopMain.js'));
+  check('desktop entry boots src/desktopMain.js',
+    desktopHtml.includes('src="./src/desktopMain.js"'));
+  check('desktop GLB assets are present',
+    ['fortis-gunship.glb', 'fortis-habitat.glb', 'industrial-prop.glb']
+      .every((file) => existsSync(join(ROOT, 'assets', 'desktop', file))));
+  check('desktop body registry is cloned, scaled, and additive',
+    DESKTOP_BODIES.length > BODIES.length &&
+    DESKTOP_BODIES.find(b => b.id === 'earth') !== BODIES.find(b => b.id === 'earth') &&
+    DESKTOP_BODIES.find(b => b.id === 'earth').radius === Math.round(BODIES.find(b => b.id === 'earth').radius * DESKTOP_WORLD_SCALE.radius));
+}
 
 console.log('\n== 2. World math (visual/collision agreement) ==');
 // Build visuals to initialize derived fields (_centerV, zone dirs).

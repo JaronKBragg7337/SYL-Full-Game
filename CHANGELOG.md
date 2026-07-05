@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## 2026-07-05 — Separate desktop fidelity build (Builder: Codex)
+- Added `desktop.html` and `src/desktopMain.js` as a separate desktop browser
+  route. The existing `index.html` / `src/main.js` mobile-safe build is left in
+  place and now has tests proving the two entries coexist.
+- Added cloned/scaled desktop body data with 12 total bodies, richer terrain
+  profiles, desktop-only worlds, and a separate `syl_desktop_save` localStorage
+  slot so phone/public saves are not mixed with the scaled desktop world.
+- Added desktop PBR terrain textures, higher-detail mesh-true planet grids,
+  atmosphere shader shells, rings, HDR-style lighting, shadows, bloom
+  post-processing, and GLB-imported ship/building/prop assets.
+- Added static `.glb` serving, vendored Three example loader/post-processing
+  modules, and desktop deployment docs. `npm test` is now 95/95.
+
 ## 2026-07-05 — True-space ship attitude no longer snaps to planets (Builder: Codex)
 - Fixed the space-flight snap/flip bug reported near Aethelgard: assisted
   true-space flight now rotates around the ship's own local axes instead of

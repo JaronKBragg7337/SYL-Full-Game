@@ -17,6 +17,12 @@ or `node server.js` → http://localhost:8377. That is the default local URL; if
 normal documented path stays 8377. Click the game for mouse control; on touch
 devices the joystick/buttons appear automatically.
 
+**Desktop fidelity lane:** run the same server and open
+http://localhost:8377/desktop.html. This is a separate RTX-class browser route
+with scaled desktop-only bodies, PBR procedural terrain, GLB ship/building/prop
+models, HDR-style lighting, shadows, and bloom. The normal `index.html` phone-safe
+route is unchanged and keeps the public/mobile budget.
+
 **The bigger picture:** this repo is the living blueprint and public playtest
 for the official SYL game (Unreal/Unity — see VISION.md "The official game"
 and ROADMAP Milestone 7). Target: EVE-style planet-to-planet open world,
@@ -71,7 +77,7 @@ heavy external assets are required.
 ## Verify it works
 
 ```
-npm test        # 65 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, registries, crafting, dev tools
+npm test        # 95 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, registries, crafting, dev tools, desktop coexistence
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -80,6 +86,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | System | File |
 |---|---|
 | Game loop / bootstrap only | `src/main.js` |
+| Desktop high-fidelity bootstrap | `desktop.html`, `src/desktopMain.js`, `src/desktop/*`, `assets/desktop/*.glb` |
 | Renderer + **floating origin** | `src/core/engine.js` |
 | Noise/terrain math (single source of truth) | `src/core/math3d.js` |
 | Planet/body **data registry** | `src/world/bodies.js` |

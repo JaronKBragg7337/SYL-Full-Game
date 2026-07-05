@@ -22,13 +22,14 @@ To ship a new build (after `npm test` is green and you've committed here):
 ```
 git clone https://github.com/JaronKBragg7337/heartbeat-observatory /tmp/hb
 rm -rf /tmp/hb/games/syl && mkdir -p /tmp/hb/games/syl
-cp -r index.html lib src /tmp/hb/games/syl/
+cp -r index.html desktop.html lib src assets /tmp/hb/games/syl/
 cd /tmp/hb && git add -A && git commit -m "SYL: sync build <version/commit>" && git push
 ```
 Vercel deploys automatically (~1 min). Verify at
-https://heartbeatobservatory.com/games/syl/ — boot + one interaction + no
-console errors. Only `index.html`, `lib/`, `src/` ship; docs/tests/server stay
-in this repo. Note: localStorage saves are per-origin — players on the site
+https://heartbeatobservatory.com/games/syl/ and
+https://heartbeatobservatory.com/games/syl/desktop.html — boot + one interaction
+with no console errors. Only `index.html`, `desktop.html`, `lib/`, `src/`, and
+`assets/` ship; docs/tests/server/tools stay in this repo. Note: localStorage saves are per-origin — players on the site
 keep separate progress from localhost. ROADMAP M6 has the automation task.
 
 Other static hosts (GitHub Pages, itch.io) also work if ever needed.

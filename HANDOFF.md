@@ -16,6 +16,40 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Codex — Desktop fidelity route added beside mobile build
+
+**State:** working. The phone-safe `index.html` route still boots
+`src/main.js`; the new desktop route is `desktop.html` and boots
+`src/desktopMain.js`.
+
+**Shipped:** added a separate desktop browser build that reuses floating
+origin, traversal, custom integrators, registries, UI, inventory, ship builder,
+factions, and pickups. Desktop-only additions: cloned/scaled body registry with
+12 bodies, richer terrain profiles, `syl_desktop_save`, PBR procedural terrain
+textures, high-detail mesh-true planet grids, atmosphere shader shells, ring
+visuals, HDR-style lighting, shadows, bloom post-processing, GLB-imported
+Fortis gunship/building/prop assets, `.glb` static serving, and deployment docs
+that include `desktop.html` + `assets/`.
+
+**Verified:** baseline before changes was `npm test` 91/91. After changes,
+`npm test` passes 95/95. Syntax checks pass for edited runtime modules. Static
+server smoke on port 8381 returned 200 for `desktop.html`, `src/desktopMain.js`,
+GLB assets, and vendored loader modules. Headless Chrome/CDP booted
+`/desktop.html`: `window.game === true`, boot message removed, 12 desktop
+bodies loaded, surface star opacity 0.06; only `favicon.ico` 404 was logged.
+
+**Next up:** feel/visual pass on a real GPU in a normal desktop browser,
+especially terrain/pad scale, atmosphere readability, and GLB art direction.
+This pass deliberately did not tune gameplay handling.
+
+**Gotchas:** The desktop route uses cloned body data; do not mutate base
+`BODIES` for desktop presentation. Desktop saves are intentionally separate
+from public/mobile saves. Post-processing depends on vendored Three example
+modules under `lib/examples/jsm/`; if adding another pass, vendor its full
+dependency chain.
+
+---
+
 ## 2026-07-05 — Codex — True-space ship attitude no longer snaps to planets
 
 **State:** working in tests. Jaron reached space/Aethelgard and found the ship

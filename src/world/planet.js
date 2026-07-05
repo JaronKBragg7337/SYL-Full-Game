@@ -38,6 +38,7 @@ import { fbm, smoothstep } from '../core/math3d.js';
 export function analyticTerrainRadiusAt(body, dir) {
   const t = body.terrain;
   let h = fbm(dir.x, dir.y, dir.z, t.seed, t.octaves, t.freq) * t.amplitude;
+  h = shapeTerrainProfile(t, dir, h);
 
   // Landing-zone flattening — blended into the SAME function.
   for (const zone of body.landingZones) {
@@ -52,6 +53,43 @@ export function analyticTerrainRadiusAt(body, dir) {
     }
   }
   return body.radius + h;
+}
+
+function shapeTerrainProfile(t, dir, baseHeight) {
+  const profile = t.profile || 'continental';
+  const amp = t.amplitude || 1;
+  const seed = t.seed || 1;
+  if (profile === 'ridged') {
+    const r = 1 - Math.abs(fbm(dir.x, dir.y, dir.z, seed + 17, t.octaves + 1, t.freq * 1.7));
+    return baseHeight * 0.45 + Math.pow(r, 2.6) * amp * 1.35 - amp * 0.18;
+  }
+  if (profile === 'cratered') {
+    const basins = 1 - Math.abs(fbm(dir.x, dir.y, dir.z, seed + 31, 4, t.freq * 1.15));
+    const rims = Math.sin(Math.max(0, basins) * Math.PI * 7.0);
+    return baseHeight * 0.55 - Math.pow(basins, 4.0) * amp * 1.2 + Math.max(0, rims) * amp * 0.22;
+  }
+  if (profile === 'volcanic') {
+    const cones = Math.pow(Math.max(0, fbm(dir.x, dir.y, dir.z, seed + 53, 5, t.freq * 2.2)), 3.2);
+    const trenches = Math.pow(1 - Math.abs(fbm(dir.z, dir.x, dir.y, seed + 57, 4, t.freq * 3.0)), 5.0);
+    return baseHeight * 0.75 + cones * amp * 1.7 - trenches * amp * 0.65;
+  }
+  if (profile === 'ice') {
+    const cracks = Math.pow(1 - Math.abs(fbm(dir.x, dir.y, dir.z, seed + 71, 4, t.freq * 8.0)), 9.0);
+    return baseHeight * 0.32 + cracks * amp * 0.95;
+  }
+  if (profile === 'dune') {
+    const bands = Math.sin((dir.x * 7.0 + dir.z * 5.0 + fbm(dir.x, dir.y, dir.z, seed + 83, 3, t.freq)) * Math.PI);
+    return baseHeight * 0.22 + bands * amp * 0.38;
+  }
+  if (profile === 'oceanic') {
+    const islands = Math.max(0, fbm(dir.x, dir.y, dir.z, seed + 97, t.octaves, t.freq * 1.4));
+    return baseHeight * 0.24 + Math.pow(islands, 2.2) * amp * 1.25 - amp * 0.28;
+  }
+  if (profile === 'gas') {
+    const bands = Math.sin((dir.y * 18.0 + fbm(dir.x, dir.y, dir.z, seed + 101, 3, 2.0) * 2.5) * Math.PI);
+    return bands * amp * 0.18 + baseHeight * 0.05;
+  }
+  return baseHeight;
 }
 
 // ---------------------------------------------------------------------------
