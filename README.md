@@ -53,11 +53,14 @@ dead engine, missing power cell, missing landing gear, empty tanks.
    the automated public transport. It rides a visible ship between Earth, Moon,
    Aethelgard, Pyrrhus, Veldora, Dunewind, and Rustholm, then lets you
    disembark at each base.
-8. Additional bodies/zones carry test crates with
+8. Landing zones now have more world dressing around them: small settlements,
+   city blocks, roads, terminal canopies, trees/forests, rocks, ice spires,
+   volcanic vents, desert windbreaks, and harbor pylons depending on the body.
+9. Additional bodies/zones carry test crates with
    expanded resources and ship parts.
-9. Open **I** for inventory and crafting. Crafting is intentionally simple:
+10. Open **I** for inventory and crafting. Crafting is intentionally simple:
    buttons are enabled only when the carried inputs are present.
-10. **F5** saves, **F9** loads, autosave every 60 s.
+11. **F5** saves, **F9** loads, autosave every 60 s.
 
 ## Controls
 
@@ -81,7 +84,7 @@ heavy external assets are required.
 ## Verify it works
 
 ```
-npm test        # 102 headless checks incl. controls, touch ship steering, collision, Earth→Moon sim, civil transport, registries, crafting, dev tools, desktop coexistence
+npm test        # 105 headless checks incl. controls, touch ship steering, collision, world detail layers, Earth→Moon sim, civil transport, registries, crafting, dev tools, desktop coexistence
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -96,6 +99,7 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Planet/body **data registry** | `src/world/bodies.js` |
 | Kimi expanded body registry | `src/world/bodies_expanded.js` |
 | Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
+| Visual-only settlements, roads, forests, biome dressing | `src/world/worldDetails.js` |
 | Civil transport route + rideable public ship | `src/world/civilTransport.js` |
 | World progress state | `src/world/worldState.js` |
 | Pickup placement | `src/world/pickups.js` |

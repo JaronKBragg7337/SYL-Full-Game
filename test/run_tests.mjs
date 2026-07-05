@@ -158,6 +158,19 @@ const earth = getBody('earth');
     `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
 }
 {
+  const landable = BODIES.filter(b => b.landingZones.length > 0);
+  check('landable worlds build surface detail layers',
+    landable.every(b => b._detailStats?.zonesDetailed === b.landingZones.length),
+    landable.map(b => `${b.id}:${b._detailStats?.zonesDetailed || 0}/${b.landingZones.length}`).join(' '));
+  check('landing zones have settlement buildings and roads',
+    landable.every(b => b._detailStats?.settlementBuildings >= b.landingZones.length * 3 &&
+      b._detailStats?.roadSegments >= b.landingZones.length * 2),
+    landable.map(b => `${b.id}:${b._detailStats?.settlementBuildings || 0}b/${b._detailStats?.roadSegments || 0}r`).join(' '));
+  check('exploration dressing exists beyond pads',
+    landable.every(b => b._detailStats?.naturalProps >= b.landingZones.length * 10),
+    landable.map(b => `${b.id}:${b._detailStats?.naturalProps || 0}`).join(' '));
+}
+{
   const nearEarth = earth._centerV.clone().add(new THREE.Vector3(earth.radius * 1.5, 0, 0));
   check('dominant body near Earth is Earth', dominantBody(BODIES, nearEarth).id === 'earth');
   const moon = getBody('moon');

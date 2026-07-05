@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 2026-07-05 — Planet settlement and biome detail layer (Builder: Codex)
+- Added `src/world/worldDetails.js`, a deterministic visual-only dressing layer
+  that builds towns, city blocks, roads, terminal canopies, trees/forests,
+  rocks, ice spires, volcanic vents, desert windbreaks, and harbor pylons around
+  landing zones across the SYL bodies.
+- Wired the detail layer into both the public/mobile planet builder and the
+  desktop fidelity builder without changing terrain collision, saves, loot, or
+  traversal. The body map now reports visible surface-detail counts for known
+  worlds.
+- Added regression coverage that every landable world receives settlement,
+  road, and exploration dressing. `npm test` is now 105/105.
+
 ## 2026-07-05 — Civil transport line + transit bases (Builder: Codex)
 - Added a rideable automated civil transport ship (`src/world/civilTransport.js`)
   that moves continuously between planetary bases. Players can board at a

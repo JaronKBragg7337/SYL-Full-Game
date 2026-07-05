@@ -16,6 +16,43 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Codex — Planet settlement and biome detail layer
+
+**State:** working in `SYL-Full-Game`; sync to Heartbeat `games/syl/` is the
+next step after the canonical game commit.
+
+**Shipped:** added `src/world/worldDetails.js` and wired it into
+`src/world/planet.js` plus `src/desktop/desktopPlanet.js`. The public/mobile
+build now adds deterministic visual-only towns, small city clusters, roads,
+terminal canopies, trees/forests, rocks, ice spires, volcanic vents, desert
+windbreaks, and harbor pylons around landing zones on landable bodies. The
+desktop route gets a lighter accent version because desktop already carries
+PBR terrain, GLBs, shadows, and bloom. `src/ui/ui.js` now reports surface detail
+counts in the body map for known worlds.
+
+**Verified:** `node --check` passed for edited runtime modules. `npm test`
+passes 105/105, including new checks that every landable world builds a detail
+layer with settlement buildings, roads, and exploration dressing. Local static
+server on `http://127.0.0.1:8377/` returned 200 for `/`, `/desktop.html`, and
+`/src/world/worldDetails.js`. Chrome visual QA on the public route rendered the
+canvas, opened `M`, showed `surface: 36 buildings, 104 wild details`, preserved
+the CIVIL TRANSPORT LINE, and logged zero warnings/errors. Screenshots confirmed
+trees/settlement dressing near the Earth base. Desktop browser automation
+timed out while probing `/desktop.html`; static HTTP returned 200, but a normal
+desktop visual pass remains needed before claiming the desktop route fully
+verified for this slice.
+
+**Next up:** commit/push SYL, sync the new files into Heartbeat
+`games/syl/`, verify live public route, then inspect Heartbeat engine realtime
+patterns for shared build/vehicle persistence in SYL and Fable.
+
+**Gotchas:** `worldDetails.js` is visual-only by design. Do not put loot,
+collision, save payload, or authoritative multiplayer state in it. New solid
+objects still need analytic colliders in `planet.js`; new persistent/player-
+owned objects belong in a realtime/persistence system, not this detail layer.
+
+---
+
 ## 2026-07-05 — Codex — Civil transport line and transit bases
 
 **State:** working locally; ready for commit and live-site sync after final diff

@@ -56,8 +56,12 @@ de-risk the official build.
       walk-in vehicles, and the asset pipeline have one owned checklist.
 - [ ] Resource nodes + mining tool on-foot loop (extends items/inventory);
       this is where timed respawn belongs, not one-shot salvage crates
-- [ ] More bodies: gas-giant no-landing body, ice moon (data + one new terrain
-      noise variant each — prove the registry scales to 6+)
+- [x] Settlement/biome dressing pass: landing zones now get deterministic
+      visual towns, roads, terminal canopies, forests/trees, rocks, ice spires,
+      volcanic vents, desert windbreaks, and harbor pylons without changing
+      collision or saves (2026-07-05).
+- [x] More bodies: gas-giant no-landing body, ice moon (data + one new terrain
+      noise variant each — desktop lane proves the registry scales beyond 6)
 - [ ] Ship cargo transfer UI (inventory ⇄ cargo pods; cargoCap already computed)
 
 ## Milestone 3 — Real space
@@ -92,6 +96,9 @@ de-risk the official build.
 - [x] Multiplayer visibility MVP on the Heartbeat test lane: remote players and
       ship markers over Heartbeat Supabase Realtime, with no save/physics
       changes (2026-07-04). This is playtest presence, not authoritative PVP.
+- [ ] Multiplayer persistence parity: make player-owned ships/vehicles,
+      build/place actions, and persistent world objects visible to other players
+      in SYL and Fable using the Heartbeat 3D engine realtime pattern.
 - [ ] Multiplayer research spike: authoritative server for f64 world state,
       client prediction for integrators — WRITE FINDINGS BEFORE CODE
 - [ ] Server-authoritative world sim prototype (the persistent-galaxy seed)
