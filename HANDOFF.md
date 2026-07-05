@@ -16,6 +16,35 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Codex — True-space ship attitude no longer snaps to planets
+
+**State:** working in tests. Jaron reached space/Aethelgard and found the ship
+would flip back toward Earth or get blocked when pitching around in space.
+
+**Shipped:** `src/ship/ship.js` now splits assisted ship flight into two modes.
+Low altitude still uses planet-upright assisted landing with
+`ASSIST_MAX_PITCH`/`ASSIST_MAX_ROLL`. True space keeps the current ship
+quaternion and applies pitch/yaw/roll around ship-local axes, so changing the
+dominant gravity body can no longer re-level or snap the craft toward that
+planet. Space attitude rates are separate from low-altitude bank rates.
+
+**Verified:** `npm test` passes with 91/91 checks, including regressions for
+no dominant-body snap, pitching past the old nose wall, and true-space thrust
+following the pitched nose.
+
+**Next up:** phone-test the feel near Earth-to-Aethelgard transitions. If true
+space still feels too fast, tune `ASSIST_SPACE_ATTITUDE_RATE` and
+`ASSIST_SPACE_ROLL_RATE`; do not bring back dominant-body up-vector rebuilds
+in true space.
+
+**Gotchas:** The root bug was not the camera. Assisted flight rebuilt the ship
+orientation from `dominantBody(...).up` every tick. Near another planet/moon,
+that made the ship snap to the new body's up vector and hit the old pitch clamp.
+Future agents must keep true-space attitude independent from dominant body
+leveling; only landing/low-alt flight should be planet-upright.
+
+---
+
 ## 2026-07-05 — Codex — Mobile right-stick bank/pitch tuned down
 
 **State:** working in tests. Jaron confirmed the dual-stick layout, then said

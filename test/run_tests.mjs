@@ -474,7 +474,8 @@ console.log('\n== 8. Turning (yaw authority) ==');
 }
 {
   const t = new Ship(stubEngine, BODIES);
-  t.worldPos.set(0, earth.radius + 220, 0);
+  const aethelgard = getBody('aethelgard');
+  t.worldPos.copy(aethelgard._centerV).add(new THREE.Vector3(0, aethelgard.radius + aethelgard.atmosphere.height + 30000, 0));
   t.velocity.set(0, 0, 0);
   t.quaternion.identity();
   t.landed = false;
@@ -485,9 +486,45 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   for (let i = 0; i < 45; i++) t.tick(dt, true, ctl);
   const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
-  check('assisted NOSE pitch tilts the visible ship in high flight',
-    Math.abs(t.assistPitch) > 0.45 && startFwd.dot(endFwd) < 0.85,
-    `pitch=${(t.assistPitch || 0).toFixed(2)} dot=${startFwd.dot(endFwd).toFixed(2)}`);
+  check('true-space NOSE pitch tilts the visible ship',
+    startFwd.dot(endFwd) < 0.85,
+    `dot=${startFwd.dot(endFwd).toFixed(2)}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  const aethelgard = getBody('aethelgard');
+  t.worldPos.copy(aethelgard._centerV).add(new THREE.Vector3(0, aethelgard.radius + aethelgard.atmosphere.height + 30000, 0));
+  t.velocity.set(0, 0, 0);
+  t.quaternion.setFromEuler(new THREE.Euler(0.7, 1.1, -0.4, 'XYZ'));
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const before = t.quaternion.clone();
+  const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const dt = 1 / 60;
+  for (let i = 0; i < 30; i++) t.tick(dt, true, ctl);
+  check('true-space attitude does not snap to dominant body up',
+    Math.abs(before.dot(t.quaternion)) > 0.999,
+    `quatDot=${before.dot(t.quaternion).toFixed(4)} body=${t.dominant().id}`);
+}
+{
+  const t = new Ship(stubEngine, BODIES);
+  const aethelgard = getBody('aethelgard');
+  t.worldPos.copy(aethelgard._centerV).add(new THREE.Vector3(0, aethelgard.radius + aethelgard.atmosphere.height + 30000, 0));
+  t.velocity.set(0, 0, 0);
+  t.quaternion.identity();
+  t.landed = false;
+  t.fuel = 100;
+  t.stats.ready = true;
+  const ctl = { pitch: -1, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
+  const dt = 1 / 60;
+  const startFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  for (let i = 0; i < 135; i++) t.tick(dt, true, ctl);
+  const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
+  const turned = Math.acos(Math.max(-1, Math.min(1, startFwd.dot(endFwd))));
+  check('true-space pitch can pass the old nose wall',
+    turned > 1.6,
+    `turnedDeg=${(turned * 180 / Math.PI).toFixed(0)} dot=${startFwd.dot(endFwd).toFixed(2)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);
@@ -532,7 +569,8 @@ console.log('\n== 8. Turning (yaw authority) ==');
 }
 {
   const t = new Ship(stubEngine, BODIES);
-  t.worldPos.set(0, earth.radius + 220, 0);
+  const aethelgard = getBody('aethelgard');
+  t.worldPos.copy(aethelgard._centerV).add(new THREE.Vector3(0, aethelgard.radius + aethelgard.atmosphere.height + 30000, 0));
   t.velocity.set(0, 0, 0);
   t.quaternion.identity();
   t.landed = false;
@@ -543,10 +581,20 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const burn = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 1, assistStrafe: 0 };
   for (let i = 0; i < 50; i++) t.tick(dt, true, pitchUp);
   const nose = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion).normalize();
+  const ghost = new Ship(stubEngine, BODIES);
+  ghost.worldPos.copy(t.worldPos);
+  ghost.velocity.copy(t.velocity);
+  ghost.quaternion.copy(t.quaternion);
+  ghost.landed = false;
+  ghost.fuel = 100;
+  ghost.stats.ready = true;
+  const coast = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, descend: false, brake: false, assist: true, assistForward: 0, assistStrafe: 0 };
   for (let i = 0; i < 25; i++) t.tick(dt, true, burn);
-  check('assisted high-flight thrust follows pitched nose',
-    t.velocity.clone().normalize().dot(nose) > 0.65 && Math.abs(t.velocity.y) > 2,
-    `velDot=${t.velocity.clone().normalize().dot(nose).toFixed(2)} vy=${t.velocity.y.toFixed(1)}`);
+  for (let i = 0; i < 25; i++) ghost.tick(dt, true, coast);
+  const thrustDelta = t.velocity.clone().sub(ghost.velocity).normalize();
+  check('true-space thrust follows pitched nose',
+    thrustDelta.dot(nose) > 0.65,
+    `deltaDot=${thrustDelta.dot(nose).toFixed(2)} vy=${t.velocity.y.toFixed(1)}`);
 }
 {
   const t = new Ship(stubEngine, BODIES);

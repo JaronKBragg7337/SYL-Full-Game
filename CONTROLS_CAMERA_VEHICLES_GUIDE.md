@@ -1,6 +1,6 @@
 # Controls, Camera, and Vehicle Wiring Guide
 
-Status as of 2026-07-04.
+Status as of 2026-07-05.
 
 This guide is for Jaron or any agent who needs to change ship controls without
 guessing through chat history. It explains where the keyboard/touch input,
@@ -10,6 +10,13 @@ Important current repo note: this guide is rebased on top of Claude/Fable's
 2026-07-04 root-cause repair (`e056ff7` on `origin/main`), which removed the
 assisted-flight early return, restored a chase camera that follows the ship,
 made terrain collision mesh-true, and added a solid ship hull.
+
+Critical 2026-07-05 space-flight lesson from Jaron's Aethelgard tests: true
+space attitude must not be rebuilt from the current dominant planet/moon up
+vector. Low-altitude assisted flight may stay planet-upright for landing, but
+space flight keeps the ship quaternion and rotates around ship-local axes.
+Otherwise crossing from Earth influence toward another body snaps/flips the
+ship and recreates the old nose pitch wall.
 
 Critical 2026-07-04 lesson from Jaron's phone tests: physics rotation is not
 enough. The ship quaternion was changing while the visible `ship.group`
@@ -160,21 +167,46 @@ physics should not read mouse input directly.
 
 File: `src/ship/ship.js`
 
+Function: `Ship.tick(dt, piloted, controls)`
+
+Assisted ship flight intentionally has two attitude modes:
+
+- Low altitude: planet-upright, landing-friendly, with clamped visual pitch and
+  roll. Tune `ASSIST_MAX_PITCH` and `ASSIST_MAX_ROLL` only for this mode.
+- True space: free attitude. Pitch/yaw/roll apply around the ship's local axes,
+  the current quaternion is preserved, and dominant-body changes must not
+  re-level the craft. Tune `ASSIST_SPACE_ATTITUDE_RATE` and
+  `ASSIST_SPACE_ROLL_RATE` for this mode.
+
+Do not use the camera forward vector or the current planet's up vector as the
+basis for true-space turning. The ship's nose is:
+
+```js
+new THREE.Vector3(0, 0, 1).applyQuaternion(ship.quaternion)
+```
+
+Forward thrust in true space should use that nose vector so the craft flies
+where it is actually aimed.
+
+File: `src/ship/ship.js`
+
 Function: `tick(dt, piloted, controls)`
 
 This owns what the ship actually does with the controls.
 
 In assisted mode, current flow is:
 
-1. `controls.yaw` rotates the ship quaternion around local planet up.
-2. `controls.pitch` updates stored `assistPitch` once the ship is safely
-   airborne (`alt > 60` in `ship.js`).
-3. Ship forward is calculated from local `+Z`.
-4. `controls.assistForward` accelerates along flat forward near the ground and
-   along the real 3D nose in high flight.
-5. `controls.thrustUp` accelerates along planet up.
-6. Damp/brake/speed cap are applied.
-7. Position is updated.
+1. Decide low-altitude vs true-space attitude from body atmosphere height.
+2. Low altitude: `controls.yaw` rotates around local planet up, pitch/roll use
+   clamped visual assist angles, and forward thrust uses flat ship heading.
+3. True space: pitch/yaw/roll rotate the actual quaternion around ship-local
+   axes, without rebuilding from any planet/moon up vector.
+4. Ship forward is calculated from local `+Z`.
+5. `controls.assistForward` accelerates along flat forward near the ground and
+   along the real 3D nose in true space.
+6. `controls.thrustUp` accelerates along planet up.
+7. Damp/brake/speed cap are applied.
+8. Position is updated.
 
 Important convention:
 

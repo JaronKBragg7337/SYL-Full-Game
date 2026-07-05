@@ -1,5 +1,17 @@
 # CHANGELOG.md
 
+## 2026-07-05 — True-space ship attitude no longer snaps to planets (Builder: Codex)
+- Fixed the space-flight snap/flip bug reported near Aethelgard: assisted
+  true-space flight now rotates around the ship's own local axes instead of
+  rebuilding the ship quaternion from whichever planet/moon currently has
+  dominant gravity.
+- Removed the old high-flight nose wall in true space. Pitch can now continue
+  past the previous clamp so the ship can aim back toward a planet or flip
+  through a full attitude change, while low-altitude landing flight still keeps
+  its planet-upright safety clamps.
+- Added regression checks for no dominant-body snap, passing the old pitch
+  wall, and thrust following the pitched ship nose in true space.
+
 ## 2026-07-05 — Mobile attitude stick speed tuning (Builder: Codex)
 - Reduced right ATTITUDE stick bank/pitch output so mobile bank left/right no
   longer spins the ship too quickly, especially with maneuvering-thruster torque
