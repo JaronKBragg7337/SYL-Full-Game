@@ -28,6 +28,15 @@ if (!existsSync(join(shimDir, 'package.json'))) {
 }
 
 const THREE = await import('three');
+
+// Mock localStorage for headless Node testing (Settings module uses it).
+const _lsStore = new Map();
+globalThis.localStorage = {
+  getItem: (k) => _lsStore.get(k) ?? null,
+  setItem: (k, v) => _lsStore.set(k, v),
+  removeItem: (k) => _lsStore.delete(k),
+};
+
 const { BODIES, getBody } = await import('../src/world/bodies.js');
 const { DESKTOP_BODIES, DESKTOP_WORLD_SCALE } = await import('../src/desktop/desktopBodies.js');
 const {
@@ -49,6 +58,8 @@ const { ITEMS, getItem } = await import('../src/items/items.js');
 const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recipes.js');
 const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
 const { joystickAxes, joystickMoveKeys, joystickShipControls, joystickShipAttitude } = await import('../src/ui/touch.js');
+const { Settings } = await import('../src/ui/settings.js');
+const { SpaceProps } = await import('../src/world/spaceProps.js');
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = '') {
@@ -264,6 +275,35 @@ console.log('\n== 3b. Civil transport line ==');
     rider.worldPos.distanceTo(zoneWorldPos(transport.currentStop().body, transport.currentStop().zone, 0.4)) < 25);
 }
 
+console.log('\n== 3c. Transport fleet, collision, door ==');
+{
+  // Multiple transports with staggered stops.
+  const fleet = [
+    new CivilTransport(stubEngine, BODIES, { startStopIndex: 0, phaseOffset: 0 }),
+    new CivilTransport(stubEngine, BODIES, { startStopIndex: 2, phaseOffset: 10 }),
+    new CivilTransport(stubEngine, BODIES, { startStopIndex: 4, phaseOffset: 20 }),
+  ];
+  check('multiple transports exist and are on different stops',
+    fleet[0].routeIndex === 0 && fleet[1].routeIndex === 2 && fleet[2].routeIndex === 4);
+
+  // Transport collision pushes player away.
+  const transport = new CivilTransport(stubEngine, BODIES);
+  const collider = new Player(stubEngine, { down: () => false, mouseDX: 0, mouseDY: 0 }, BODIES);
+  collider.placeAt(transport.worldPos.clone());
+  const before = collider.worldPos.clone();
+  const push = transport.collide(collider.worldPos, 0.45);
+  check('transport collision returns a push vector when overlapping', push && push.length() > 0.1);
+  collider.worldPos.add(push);
+  check('transport collision pushes player away', collider.worldPos.distanceTo(before) > 0.1);
+
+  // Door toggle changes state.
+  check('transport door starts closed', !transport.doorOpen);
+  transport.toggleDoor();
+  check('transport door toggle changes state', transport.doorOpen);
+  transport.toggleDoor();
+  check('transport door toggle reverts state', !transport.doorOpen);
+}
+
 console.log('\n== 4. Modular ship: damage → gather → repair → ready ==');
 const ship = new Ship(stubEngine, BODIES);
 applyStarterDamage(ship);
@@ -277,6 +317,11 @@ check('ship visual uses code-built Fortis gunship silhouette',
   !!ship.group.getObjectByName('gunship:cockpit_glass_left') &&
   !!ship.group.getObjectByName('gunship:rear_ramp') &&
   !!ship.group.getObjectByName('gunship:port_engine'));
+check('ship door starts closed', !ship.doorOpen);
+ship.toggleDoor();
+check('ship door toggle changes state', ship.doorOpen);
+ship.toggleDoor();
+check('ship door toggle reverts state', !ship.doorOpen);
 const inv = new Inventory();
 inv.add('part_power'); inv.add('part_gear');
 inv.add('salvage_alloy', 4); inv.add('wiring_loom', 3); inv.add('fuel_hydrazine', 4);
@@ -777,6 +822,32 @@ console.log('\n== 9. Dev editor tools ==');
   giveInventoryKit(kitInv);
   check('dev giveInventoryKit adds resources', kitInv.count('salvage_alloy') >= 8 && kitInv.count('fuel_hydrazine') >= 8);
   check('dev giveInventoryKit adds installable parts', ITEMS.filter(i => i.kind === 'part').every(i => kitInv.count(i.id) >= 1));
+}
+
+console.log('\n== 10. Settings ==');
+{
+  const s = new Settings();
+  check('settings defaults are sane', s.get('mouseSens') === 1.0 && s.get('touchSens') === 1.0 && s.get('graphics') === 'high' && s.get('sound') === 'on');
+  s.set('mouseSens', 2.5);
+  check('settings set/get round-trip', s.get('mouseSens') === 2.5);
+  s.set('mouseSens', 5.0);
+  check('settings clamp above max', s.get('mouseSens') === 3.0);
+  s.set('mouseSens', -1.0);
+  check('settings clamp below min', s.get('mouseSens') === 0.1);
+  s.set('graphics', 'low');
+  check('settings string value round-trip', s.get('graphics') === 'low');
+  s.reset();
+  check('settings reset restores defaults', s.get('mouseSens') === 1.0 && s.get('graphics') === 'high');
+}
+
+console.log('\n== 11. Space props ==');
+{
+  const sp = new SpaceProps(stubEngine);
+  check('space props spawns between 40 and 60 objects', sp.props.length >= 40 && sp.props.length <= 60, `got ${sp.props.length}`);
+  check('every prop is tracked by the engine', sp.props.every(p => p.trackEntry && p.trackEntry.object3d === p.mesh));
+  check('props have world positions far from origin', sp.props.every(p => p.worldPos.length() >= 500000));
+  sp.tick(0.016);
+  check('space props tick does not throw', true);
 }
 
 console.log(`\n========================================`);
