@@ -67,12 +67,12 @@ dead engine, missing power cell, missing landing gear, empty tanks.
 On foot: **WASD** move · **Shift** run · **Space** jump · **E** board ship / board or exit civil transport · **F** gather
 Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **↑/↓** nose pitch in high flight · **Z** descend ·
 locked forward chase camera · **Space** climb · **X/Ctrl** brake · **G** gear ·
-**C** cockpit/chase camera · **E** exit (landed)
+**C** cockpit/chase camera · **V** interior view (while piloting or passenger) · **T** toggle door/ramp · **E** exit (landed)
 Touch ship: left stick lifts/drives/strafes; right **ATTITUDE** stick gently
 banks and pitches the ship with diagonal drift filtering; **DESCEND** overrides
 lift so you can guide the ship down. Ship chase camera is locked behind/above
 the nose so turns stay readable.
-Panels: **B** ship builder · **I** inventory · **M** bodies + civil transport line · **H** help ·
+Panels: **B** ship builder · **I** inventory · **M** bodies + civil transport line · **O** settings · **H** help ·
 **Close** button / **Esc** / same key closes panels · **F5/F9** save/load
 
 Builder/dev tools: add `?dev=1` to the URL to reveal the **DEV** button. It can
@@ -84,7 +84,7 @@ heavy external assets are required.
 ## Verify it works
 
 ```
-npm test        # 105 headless checks incl. controls, touch ship steering, collision, world detail layers, Earth→Moon sim, civil transport, registries, crafting, dev tools, desktop coexistence
+npm test        # 124 headless checks incl. controls, touch ship steering, collision, world detail layers, Earth→Moon sim, civil transport, transport fleet, settings, space props, ship interiors, registries, crafting, dev tools, desktop coexistence
 ```
 Manual pass: see HANDOFF.md → "How to verify".
 
@@ -101,6 +101,8 @@ Manual pass: see HANDOFF.md → "How to verify".
 | Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
 | Visual-only settlements, roads, forests, biome dressing | `src/world/worldDetails.js` |
 | Civil transport route + rideable public ship | `src/world/civilTransport.js` |
+| Space props / debris field (visual-only) | `src/world/spaceProps.js` |
+| Settings (mouse/touch sens, graphics, sound) | `src/ui/settings.js` |
 | World progress state | `src/world/worldState.js` |
 | Pickup placement | `src/world/pickups.js` |
 | Surface⇄space **state machine** | `src/world/traversal.js` |

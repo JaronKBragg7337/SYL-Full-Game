@@ -16,6 +16,67 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-05 — Kimi (Moonshot AI) — Settings, space props, transport fleet, ship interiors, back buttons
+
+**State:** working in `SYL-Full-Game` and synced to Heartbeat `games/syl/`. Live
+and verified. Back buttons also added to Fable Survival and President-Sim.
+
+**Shipped:**
+- **Settings screen** (`src/ui/settings.js`): localStorage-persisted settings
+  with mouse sensitivity, touch sensitivity, graphics toggle, and sound toggle.
+  Bound to `O` key. Settings panel rendered in `src/ui/ui.js`. Sensitivity values
+  clamped [0.1, 3.0] with `toFixed(2)` storage. Wired into `player.js` mouse look
+  and `main.js` touch attitude controls.
+- **Space props** (`src/world/spaceProps.js`): 40-60 decorative objects
+  (asteroids, clusters, debris, satellites) in a 500k–2M unit radius field around
+  the sun. `tick(dt)` rotates objects slowly. Visual-only by design (no
+  collision) — documented in code comments.
+- **Transport fleet** (`src/world/civilTransport.js`): 3 staggered transports
+  on the same 7-stop route (starts at stops 0, 2, 4 with 0s/10s/20s phase offsets).
+  Added `collide()` with oriented-box hull pushback. `nudgeIfOverlappingPlayer()`
+  prevents spawn-ins. Added `toggleDoor()` with ramp animation and
+  `interiorCameraPose()` for interior view.
+- **Ship interiors** (`src/ship/ship.js`): interior bounds, `doorOpen` state,
+  `toggleDoor()`, window meshes. `src/world/traversal.js` adds `MODE.INSIDE_SHIP`
+  and `PHASE.INSIDE`. MVP interior view toggle (`V` key while piloting or
+  passenger) — not full ship-local physics but gives "look around inside, look out
+  windows" feel. `src/main.js` wires interior view keys.
+- **Multiplayer transport sync** (`src/multiplayer/multiplayer.js`): broadcasts
+  transport fleet state (`worldPos`, `quaternion`, `routeIndex`, `state`,
+  `passenger`, `doorOpen`) so remote players see all transports.
+- **No invisible walls**: verified `planet.js` has no hardcoded boundaries; only
+  terrain and visible structure footprints provide collision.
+- **Back buttons**: `← Games` link to `/games/` added to SYL `index.html` and
+  `desktop.html`, Fable Survival `index.html`, and President-Sim `index.html`.
+
+**Files touched:** `src/ui/settings.js` (new), `src/world/spaceProps.js` (new),
+`src/world/civilTransport.js`, `src/ship/ship.js`, `src/main.js`,
+`src/multiplayer/multiplayer.js`, `src/player/player.js`, `src/ui/ui.js`,
+`src/world/traversal.js`, `index.html`, `desktop.html`, `test/run_tests.mjs`.
+
+**Verified:** `npm test` 124/124 (105 original + 19 new). All new files passed
+`node --check`. Live URLs verified: `settings.js`, `spaceProps.js`,
+`civilTransport.js` all return 200 with correct content at
+`https://www.heartbeatobservatory.com/games/syl/`.
+
+**Next up:** Jaron phone-tests: settings panel (`O`), interior view (`V`), door
+toggle (`T`), transport boarding, and space prop visibility. If feel is good,
+next useful chunk is ship interior walk-around with full WASD movement inside
+(traversal.js has `MODE.INSIDE_SHIP` architecture ready).
+
+**Gotchas:**
+- Interior view is a camera toggle (MVP), not full ship-local physics. The
+  architecture exists in `traversal.js` for future full walk-around.
+- Space props are visual-only; do not add collision to them without also adding
+  spatial indexing (40-60 objects at 500k+ units is fine for visuals, not for
+  collision queries).
+- Transport fleet uses the same route for all 3 ships; staggered starts prevent
+  clumping. If adding more, keep `phaseOffset` distinct.
+- Sensitivity settings affect mouse look and touch attitude but not desktop Q/R
+  roll or arrow-key pitch — those keep existing responsiveness by design.
+
+---
+
 ## 2026-07-05 — Codex — Planet settlement and biome detail layer
 
 **State:** working in `SYL-Full-Game`; sync to Heartbeat `games/syl/` is the

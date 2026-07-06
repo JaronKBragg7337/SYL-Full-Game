@@ -1,5 +1,33 @@
 # CHANGELOG.md
 
+## 2026-07-05 — Settings screen, space props, transport fleet, ship interiors, back buttons (Builder: Kimi)
+- Added `src/ui/settings.js` with localStorage-persisted settings: mouse
+  sensitivity, touch sensitivity, graphics toggle, sound toggle. Bound to `O` key.
+  Sensitivity clamped [0.1, 3.0] and wired into `player.js` mouse look and
+  `main.js` touch attitude controls.
+- Added `src/world/spaceProps.js` with 40-60 decorative space objects
+  (asteroids, clusters, debris, satellites) in a 500k–2M unit radius field.
+  Rotates slowly. Visual-only by design (no collision).
+- Extended `src/world/civilTransport.js` to support a 3-transport fleet with
+  staggered starts (stops 0, 2, 4; 0s/10s/20s phase offsets). Added `collide()`
+  with oriented-box hull pushback, `nudgeIfOverlappingPlayer()` to prevent
+  spawn-ins, `toggleDoor()` with ramp animation, and `interiorCameraPose()` for
+  interior view.
+- Added ship interior features to `src/ship/ship.js`: interior bounds,
+  `doorOpen` state, `toggleDoor()`, and window meshes. Added `MODE.INSIDE_SHIP`
+  and `PHASE.INSIDE` to `src/world/traversal.js`. Interior view toggle (`V` key)
+  while piloting or passenger — MVP camera toggle, not full ship-local physics.
+- Extended `src/multiplayer/multiplayer.js` to broadcast transport fleet state
+  (`worldPos`, `quaternion`, `routeIndex`, `state`, `passenger`, `doorOpen`) so
+  remote players see all transports.
+- Verified no invisible walls in `planet.js` — only terrain and visible
+  structure footprints provide collision.
+- Added back buttons (`← Games` → `/games/`) to SYL `index.html` and
+  `desktop.html`, Fable Survival `index.html`, and President-Sim `index.html`.
+- Added regression tests: settings persistence, space prop creation, transport
+  fleet collision, interior mode toggle, door state, back button presence. `npm
+  test` is now 124/124.
+
 ## 2026-07-05 — Planet settlement and biome detail layer (Builder: Codex)
 - Added `src/world/worldDetails.js`, a deterministic visual-only dressing layer
   that builds towns, city blocks, roads, terminal canopies, trees/forests,

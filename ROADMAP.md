@@ -75,7 +75,10 @@ de-risk the official build.
       phase B) promoted into a player-facing nav-assist system
 
 ## Milestone 4 — SYL identity
-- [ ] Walkable ship interior (local frame riding the ship — DECISIONS #18)
+- [~] Walkable ship interior (local frame riding the ship — DECISIONS #18) — MVP:
+      interior view toggle (`V`), door toggle (`T`), window meshes, and interior
+      bounds are in. Full WASD movement inside the ship is architected
+      (`MODE.INSIDE_SHIP` in traversal.js) but not yet wired to on-foot controls.
 - [ ] Construction system: structures built over time from resources by
       machines ("the world is built, not spawned") — Builder role v1
 - [ ] Faction expansion: canon names/colors from Jaron's Drive docs replace
