@@ -16,6 +16,62 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-08 — Claude (Fable 5, Cowork) — Visual overhaul: the end of the box era + F8 Tuner
+
+**State:** working. `npm test` 139/139 (124 + 15 new render-layer tests). Every
+system that made SYL "look like Roblox" was rebuilt; gameplay math untouched.
+
+**Shipped:**
+- **`src/render/` (new layer, 3 files):** `textures.js` (runtime-painted canvas
+  textures: ground mottle, building walls w/ lit windows, hazard-ring landing
+  pads, roads, metal plates, fabric, solar — the World of ClaudeCraft
+  technique, zero image files); `props.js` (procedural builders: displaced-rock
+  boulders, leafy + pine trees, ice spires, crystals, vents, quonset huts,
+  gabled buildings, block towers, storage tanks, lattice masts, comms dishes,
+  banners, canopies, containers, solar arrays — plus `sampleFootprint()`
+  grounding + `surfaceMat()` material dedupe); `lighting.js` (warm sun + hemi
+  sky bounce + PCFSoft shadows following the camera + altitude-reactive FogExp2
+  and sky color per body; ACES/sRGB now ON for the mobile lane — it never was).
+- **planet.js:** terrain vertex colors now slope-aware (exposed rock on steep
+  faces), beach bands above sea level, per-vertex jitter, ground detail texture
+  multiplied over the colors; water is Phong w/ specular; all landing-zone
+  structures rebuilt from props (footprints still match their colliders — the
+  comment block in buildZoneStructures says so loudly).
+- **worldDetails.js (rewritten):** settlements/nature now come from pure
+  deterministic layout functions shared by BOTH visuals and NEW collider specs
+  (`zone._extraColliders`, merged in planet.js `allCollidersForZone`) — you can
+  no longer walk through settlement buildings or big trees. GROUNDING: every
+  object samples terrain under its whole footprint, bases on the lowest corner,
+  buildings fill slope gaps with foundation plinths, rocks/trees sink + tilt to
+  the terrain normal. Nothing floats.
+- **ship.js:** visible additive engine flames scaling with burn; ship casts
+  shadows. **spaceProps.js:** asteroids are displaced icosahedra (flat-shaded),
+  debris are shards, no more floating cubes. **player/transports** cast shadows.
+- **`src/dev/tuner.js` (new) — Jaron's no-AI-usage editor (F8):** live sliders
+  for exposure / sun / sky fill / haze / ship thrust / turn, persisted in
+  localStorage, applied through the shared `TUNE` object consumed by
+  lighting.js + ship.js. "Copy JSON" exports the tuned values so ONE cheap
+  agent message ("make these canon") replaces twenty feel-tuning round-trips.
+
+**Verified:** `npm test` 139/139 on a fresh clone; `node --check` on every
+touched file; deployed to the `games/syl-test` staging route and live-verified
+before promoting to `games/syl` (see heartbeat-observatory HANDOFF).
+
+**Next up:** Jaron feel-test on phone + desktop: shadows perf on his phone
+(Settings O → graphics low turns them off), the new outpost look, F8 tuner.
+Then ROADMAP: ship interior walk-around or better terrain LOD.
+
+**Gotchas:**
+- Structure visuals and colliders are matched BY HAND in two places
+  (buildZoneStructures ↔ structureCollidersForZone; settlement layout ↔
+  detailCollidersForLayout). Move a building → move its collider.
+- render/textures.js returns null without a DOM; never call .repeat on a
+  texture you didn't null-check (see planet.js terrainMap pattern).
+- Graphics 'low' disables shadows at BOOT (lighting.js reads settings once).
+- The desktop lane (src/desktop/*) was NOT touched this session.
+
+---
+
 ## 2026-07-05 — Kimi (Moonshot AI) — Settings, space props, transport fleet, ship interiors, back buttons
 
 **State:** working in `SYL-Full-Game` and synced to Heartbeat `games/syl/`. Live

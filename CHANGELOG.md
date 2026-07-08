@@ -1,5 +1,26 @@
 # CHANGELOG.md
 
+## 0.3.0 — 2026-07-08 — Visual overhaul: end of the box era (Builder: Claude, Fable 5)
+- New src/render/ layer: runtime-painted canvas textures, procedural prop
+  library (rocks/trees/spires/crystals/huts/towers/tanks/masts/dishes),
+  lighting system (warm sun, hemisphere sky bounce, PCFSoft shadows,
+  altitude-reactive fog + sky color, ACES/sRGB on the mobile lane).
+- Terrain: slope-aware rock coloring, beach bands, per-vertex jitter, ground
+  detail texture; Phong water with specular glints.
+- Grounding system: footprint sampling + foundation plinths + terrain-normal
+  alignment — nothing floats on slopes anymore.
+- Settlement buildings and large nature props now have REAL collision derived
+  from the same deterministic layout as their visuals.
+- Zone structures rebuilt: textured hazard-ring landing pads with edge lights,
+  quonset huts, gabled sheds, domed tanks, lattice masts, comms dishes,
+  faction banners, containers.
+- Ship: visible engine flames; ship/player/transports cast shadows.
+- Space props: displaced-icosahedron asteroids + shard debris (were cubes).
+- NEW F8 Tuner panel (src/dev/tuner.js): live sliders (exposure/sun/sky/haze/
+  thrust/turn), localStorage persistence, Copy-JSON export → tune without AI.
+- Tests: 139/139 (15 new: textures Node-safety, prop builders, displacement
+  determinism, grounding, layout determinism, detail collision, lighting).
+
 ## 2026-07-05 — Settings screen, space props, transport fleet, ship interiors, back buttons (Builder: Kimi)
 - Added `src/ui/settings.js` with localStorage-persisted settings: mouse
   sensitivity, touch sensitivity, graphics toggle, sound toggle. Bound to `O` key.

@@ -60,6 +60,10 @@ const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
 const { joystickAxes, joystickMoveKeys, joystickShipControls, joystickShipAttitude } = await import('../src/ui/touch.js');
 const { Settings } = await import('../src/ui/settings.js');
 const { SpaceProps } = await import('../src/world/spaceProps.js');
+const RenderTextures = await import('../src/render/textures.js');
+const RenderProps = await import('../src/render/props.js');
+const WorldDetails = await import('../src/world/worldDetails.js');
+const { allCollidersForZone } = await import('../src/world/planet.js');
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = '') {
@@ -848,6 +852,89 @@ console.log('\n== 11. Space props ==');
   check('props have world positions far from origin', sp.props.every(p => p.worldPos.length() >= 500000));
   sp.tick(0.016);
   check('space props tick does not throw', true);
+}
+
+
+console.log('\n== 12. Render layer: textures, props, grounding, detail collision ==');
+{
+  // Textures must be Node-safe (no document): every factory returns null here.
+  check('textures are headless-safe (return null without a DOM)',
+    RenderTextures.groundDetailTexture() === null &&
+    RenderTextures.padTexture(0xff0000) === null &&
+    RenderTextures.buildingWallTexture(1, 2) === null);
+
+  // Prop builders produce real geometry.
+  const rngA = (() => { let t = 42; return () => { t = (t * 1103515245 + 12345) & 0x7fffffff; return t / 0x7fffffff; }; })();
+  const rock = RenderProps.makeRock(rngA, 0x888888);
+  check('makeRock returns a mesh with vertices', rock.isMesh && rock.geometry.attributes.position.count > 20);
+  const tree = RenderProps.makeTree(rngA, 0x4b3621, 0x6fa35f);
+  check('makeTree returns trunk + canopy group', tree.isObject3D && tree.children.length >= 2);
+  const hut = RenderProps.makeQuonsetHut(rngA, 12, 10, 0x4a5c66, 0xff0000, 0.6);
+  check('makeQuonsetHut has foundation + shell + caps + door', hut.children.length >= 5);
+  const gab = RenderProps.makeGabledBuilding(rngA, 10, 6, 8, 0x4a5c66, 0xff0000, 0.6);
+  check('makeGabledBuilding has foundation + walls + roof + door', gab.children.length >= 4);
+
+  // displace is deterministic for the same seed.
+  const g1 = RenderProps.displace(new THREE.IcosahedronGeometry(2, 1), 0.5, 7);
+  const g2 = RenderProps.displace(new THREE.IcosahedronGeometry(2, 1), 0.5, 7);
+  let same = true;
+  for (let i = 0; i < g1.attributes.position.array.length; i++) {
+    if (Math.abs(g1.attributes.position.array[i] - g2.attributes.position.array[i]) > 1e-9) { same = false; break; }
+  }
+  check('displace is deterministic per seed', same);
+
+  // Grounding: footprint sampling brackets the truth and normals are sane.
+  const earth = getBody('earth');
+  const zone = earth.landingZones[0];
+  const fp = RenderProps.sampleFootprint(earth, zone._dirV, 6, 6, terrainRadiusAt);
+  check('sampleFootprint: minR <= avgR <= maxR', fp.minR <= fp.avgR + 1e-9 && fp.avgR <= fp.maxR + 1e-9);
+  check('sampleFootprint: flat pad normal is near-radial', fp.normal.dot(zone._dirV) > 0.99);
+
+  // Settlement layout is deterministic and produces buildings + colliders.
+  const layoutA = WorldDetails.computeSettlementLayout(earth, zone, 'mobile');
+  const layoutB = WorldDetails.computeSettlementLayout(earth, zone, 'mobile');
+  check('settlement layout is deterministic', JSON.stringify(layoutA) === JSON.stringify(layoutB));
+  const colliders = WorldDetails.detailCollidersForLayout(layoutA);
+  check('settlement layout emits building colliders', colliders.length >= 3 && colliders.every(c => c.kind === 'box' || c.kind === 'circle'));
+
+  // Detail colliders integrate with planet collision: standing inside a
+  // detail building must push the player out (no more walking through).
+  zone._extraColliders = colliders;
+  const bld = layoutA.find(sp => sp.type === 'gabled' || sp.type === 'quonset' || sp.type === 'tower');
+  check('layout contains at least one building', !!bld);
+  if (bld) {
+    const pos = offsetWorld(earth, zone, bld.east, bld.north, 1.0);
+    const moved = resolveStructureCollision(earth, pos, 0.45);
+    const after = localOffset(earth, zone, pos);
+    const clearedE = Math.abs(after.east - bld.east) >= bld.w / 2 - 0.2;
+    const clearedN = Math.abs(after.north - bld.north) >= bld.d / 2 - 0.2;
+    check('player inside a settlement building is pushed out', moved && (clearedE || clearedN),
+      `east ${after.east.toFixed(1)} vs bld ${bld.east.toFixed(1)}`);
+  }
+  check('allCollidersForZone merges zone + detail colliders',
+    allCollidersForZone(zone).length > colliders.length - 1);
+  zone._extraColliders = undefined;
+
+  // Lighting: init + update against a stub engine, on-surface vs in space.
+  const { initLighting, updateLighting } = await import('../src/render/lighting.js');
+  const fakeRenderer = { outputColorSpace: null, toneMapping: null, toneMappingExposure: 0, shadowMap: {} };
+  const lscene = new THREE.Scene();
+  const lengine = { scene: lscene, renderer: fakeRenderer, cameraWorldPos: new THREE.Vector3() };
+  const L = initLighting(lengine, new Settings());
+  check('lighting creates sun + hemi + fog', !!L.sun && !!L.hemi && !!lscene.fog);
+  // On Earth's surface: fog should be on; far in space: off.
+  lengine.cameraWorldPos.copy(zoneWorldPosOf(earth, zone, 2));
+  updateLighting(L, lengine, BODIES);
+  const fogOnGround = lscene.fog.density;
+  lengine.cameraWorldPos.set(9e7, 9e7, 9e7);
+  updateLighting(L, lengine, BODIES);
+  check('fog exists at the surface and dies in space', fogOnGround > 1e-5 && lscene.fog.density === 0,
+    `ground ${fogOnGround}, space ${lscene.fog.density}`);
+}
+
+function zoneWorldPosOf(body, zone, extraHeight = 0) {
+  const r = terrainRadiusAt(body, zone._dirV) + extraHeight;
+  return zone._dirV.clone().multiplyScalar(r).add(body._centerV);
 }
 
 console.log(`\n========================================`);
