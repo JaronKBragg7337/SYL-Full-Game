@@ -318,9 +318,12 @@ check('starter ship is NOT flight-ready', !ship.stats.ready, JSON.stringify(ship
 check('starter ship has no fuel', ship.fuel === 0);
 check('ship visual uses code-built Fortis gunship silhouette',
   !!ship.group.getObjectByName('Fortis_Gunship_CodeBuilt') &&
-  !!ship.group.getObjectByName('gunship:cockpit_glass_left') &&
+  !!ship.group.getObjectByName('gunship:hull') &&
+  !!ship.group.getObjectByName('gunship:canopy') &&
   !!ship.group.getObjectByName('gunship:rear_ramp') &&
-  !!ship.group.getObjectByName('gunship:port_engine'));
+  !!ship.group.getObjectByName('gunship:port_engine') &&
+  !!ship.group.getObjectByName('gunship:port_wing') &&
+  !!ship.group.getObjectByName('gunship:port_pylon'));
 check('ship door starts closed', !ship.doorOpen);
 ship.toggleDoor();
 check('ship door toggle changes state', ship.doorOpen);
@@ -935,6 +938,64 @@ console.log('\n== 12. Render layer: textures, props, grounding, detail collision
 function zoneWorldPosOf(body, zone, extraHeight = 0) {
   const r = terrainRadiusAt(body, zone._dirV) + extraHeight;
   return zone._dirV.clone().multiplyScalar(r).add(body._centerV);
+}
+
+
+console.log('\n== 13. Scene validation (visual-direction brief) ==');
+{
+  // Every body: settlement buildings must not overlap each other or the pad,
+  // roads must not exceed a sane slope, and every collider must trace back to
+  // a layout entry. These are the "world looks planned, not scattered" checks.
+  let overlaps = 0, padClashes = 0, steepRoads = 0, colliderMismatches = 0;
+  for (const body of BODIES) {
+    if (!body.landingZones?.length || body.terrain?.profile === 'gas') continue;
+    for (const zone of body.landingZones) {
+      const layout = WorldDetails.computeSettlementLayout(body, zone, 'mobile');
+      const buildings = layout.filter(sp => ['gabled', 'quonset', 'tower'].includes(sp.type));
+      // Pairwise AABB overlap (east/north plane).
+      for (let i = 0; i < buildings.length; i++) {
+        for (let j = i + 1; j < buildings.length; j++) {
+          const a = buildings[i], b = buildings[j];
+          if (Math.abs(a.east - b.east) < (a.w + b.w) / 2 + 0.5 &&
+              Math.abs(a.north - b.north) < (a.d + b.d) / 2 + 0.5) overlaps++;
+        }
+        // Pad clearance: pad radius 27.5 + half diagonal.
+        const bd = buildings[i];
+        if (Math.hypot(bd.east, bd.north) < 28 + Math.hypot(bd.w, bd.d) / 2) padClashes++;
+      }
+      // Collider count matches layout-derived count.
+      const expected = WorldDetails.detailCollidersForLayout(layout).length +
+        WorldDetails.natureCollidersForLayout(WorldDetails.computeNatureLayout(body, zone, 'mobile')).length;
+      zone._extraColliders = undefined;
+      const baseCount = allCollidersForZone(zone).length;
+      zone._extraColliders = WorldDetails.detailCollidersForLayout(layout)
+        .concat(WorldDetails.natureCollidersForLayout(WorldDetails.computeNatureLayout(body, zone, 'mobile')));
+      if (allCollidersForZone(zone).length !== baseCount + expected) colliderMismatches++;
+      zone._extraColliders = undefined;
+    }
+  }
+  check('no settlement buildings overlap each other', overlaps === 0, `${overlaps} overlapping pairs`);
+  check('no settlement buildings intrude on landing pads', padClashes === 0, `${padClashes} clashes`);
+  check('every detail collider traces to a layout entry', colliderMismatches === 0, `${colliderMismatches} zones mismatched`);
+
+  // Road slope check on Earth spawn zone: each segment end-to-end grade < 40%.
+  const earthV = getBody('earth');
+  const zoneV = earthV.landingZones[0];
+  const frame = zoneFrame(zoneV._dirV);
+  let maxGrade = 0;
+  for (const rs of [{ len: 76, yaw: 0 }, { len: 62, yaw: Math.PI / 2 }]) {
+    for (const t of [-0.5, 0.5]) {
+      const along = rs.len * t;
+      const dir = zoneV._dirV.clone()
+        .addScaledVector(frame.east, (Math.sin(rs.yaw) * along) / earthV.radius)
+        .addScaledVector(frame.north, (Math.cos(rs.yaw) * along) / earthV.radius)
+        .normalize();
+      const r0 = terrainRadiusAt(earthV, zoneV._dirV);
+      const r1 = terrainRadiusAt(earthV, dir);
+      maxGrade = Math.max(maxGrade, Math.abs(r1 - r0) / (rs.len / 2));
+    }
+  }
+  check('spawn-zone roads sit on sane grades (<40%)', maxGrade < 0.4, `max grade ${(maxGrade * 100).toFixed(0)}%`);
 }
 
 console.log(`\n========================================`);

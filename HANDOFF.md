@@ -16,6 +16,37 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-07-09 — Claude (Fable 5, Cowork) — Form-language pass: shaped ship hull, shaped astronauts, F7 collider debug, scene validation
+
+**State:** working. `npm test` 143/143 (4 new scene-validation checks caught and
+fixed a real building-overlap defect).
+
+**Shipped (visual-direction brief, "no more blockout geometry"):**
+- **Ship:** slab shells/roof/nose replaced by ONE extruded side-profile hull
+  (tail→spine→cockpit hump→windshield rake→nose drop→belly) with beveled hull
+  sides, tail fin, raked canopy + hull window strips, tapered swept wings,
+  engine pylons + intake/nozzle rings. Interior deck/ramp/door/seat unchanged;
+  colliders unchanged. Test updated to assert hull/canopy/wing/pylon exist.
+- **Astronauts:** `makeAstronaut()` in render/props.js (helmet+visor, backpack,
+  capsule limbs) replaces the pill-capsule player and multiplayer remotes;
+  remote suits tint with the player's realtime color.
+- **F7 collider debug** (src/dev/colliderDebug.js): wireframes for every zone +
+  detail collider and the ship hull box. Green=box, cyan=circle, orange=ship.
+  Any block with no wireframe = movement bug; wireframe with no visible object
+  = invisible wall to delete.
+- **Scene validation** (test section 13): buildings can't overlap (layout now
+  rejects clashing spots), can't intrude on pads, colliders must trace to
+  layout entries, spawn roads must sit under 40% grade.
+
+**Verified:** 143/143 headless; staged on games/syl-test and screenshot-checked
+before promoting (see heartbeat HANDOFF).
+
+**Gotchas:** the hull is one ExtrudeGeometry — reshape it by editing the
+profile points in rebuildVisual, not by adding boxes on top. F7 builds its
+wireframes once on first toggle; if colliders change at runtime, re-boot.
+
+---
+
 ## 2026-07-08 — Claude (Fable 5, Cowork) — Visual overhaul: the end of the box era + F8 Tuner
 
 **State:** working. `npm test` 139/139 (124 + 15 new render-layer tests). Every

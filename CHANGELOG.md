@@ -1,5 +1,14 @@
 # CHANGELOG.md
 
+## 0.4.0 — 2026-07-09 — Form-language pass (Builder: Claude, Fable 5)
+- Ship rebuilt as one connected extruded hull + fin + canopy + tapered wings
+  + engine pylons/intakes (was slab boxes). Interior + colliders unchanged.
+- Shaped astronauts (helmet/visor/backpack/capsule limbs) for player and
+  multiplayer remotes.
+- F7 collider debug view (boxes green, circles cyan, ship orange).
+- Scene validation tests: building overlap (fixed a real one), pad clearance,
+  collider provenance, road grades. Tests 143/143.
+
 ## 0.3.0 — 2026-07-08 — Visual overhaul: end of the box era (Builder: Claude, Fable 5)
 - New src/render/ layer: runtime-painted canvas textures, procedural prop
   library (rocks/trees/spires/crystals/huts/towers/tanks/masts/dishes),
