@@ -1,68 +1,80 @@
-# PORTABILITY.md — Moving, Deploying, and the Unreal Mapping
+# PORTABILITY.md — Run, Deploy, and Recover SYL
 
-## Run on any machine
-Requirements: Node ≥18 (only for the static server + tests) and a browser.
+## Repository ownership
+
+- Canonical game source:
+  `https://github.com/JaronKBragg7337/SYL-Full-Game`
+- Website/deployment repository:
+  `https://github.com/JaronKBragg7337/heartbeat-observatory`
+- Canonical public game:
+  `https://www.heartbeatobservatory.com/games/syl/`
+
+The website repository's `games/syl/` directory is a deployed mirror. Never
+develop a gameplay change only in that mirror and leave the source repository
+behind.
+
+## Run the current client locally
+
+Requirements: Node 18 or newer and a browser.
+
+```text
+git clone https://github.com/JaronKBragg7337/SYL-Full-Game.git
+cd SYL-Full-Game
+node server.js
+npm test
 ```
-git clone <repo> && cd <repo>
-node server.js          # → http://localhost:8377
-npm test                # headless verification, no browser needed
-```
-No npm install. Three.js is vendored at `lib/three.module.js` (r160).
-Any static file server works (`python -m http.server`, VS Code Live Server…);
-ES modules just need http://, not file://.
 
-## Deploy — LIVE at heartbeatobservatory.com/games/syl (required step)
+Open `http://localhost:8377/`. The current Three.js dependency is vendored. The
+local Node server only serves the client; it is not the future authoritative
+universe backend.
 
-The public build lives inside Jaron's website repo
-**github.com/JaronKBragg7337/heartbeat-observatory** (Vercel auto-deploys its
-`main` branch to heartbeatobservatory.com). The game is a static copy at
-`games/syl/` there, plus a card on `games/index.html`.
+## Production delivery
 
-To ship a new build (after `npm test` is green and you've committed here):
-```
-git clone https://github.com/JaronKBragg7337/heartbeat-observatory /tmp/hb
-rm -rf /tmp/hb/games/syl && mkdir -p /tmp/hb/games/syl
-cp -r index.html desktop.html lib src assets /tmp/hb/games/syl/
-cd /tmp/hb && git add -A && git commit -m "SYL: sync build <version/commit>" && git push
-```
-Vercel deploys automatically (~1 min). Verify at
-https://heartbeatobservatory.com/games/syl/ and
-https://heartbeatobservatory.com/games/syl/desktop.html — boot + one interaction
-with no console errors. Only `index.html`, `desktop.html`, `lib/`, `src/`, and
-`assets/` ship; docs/tests/server/tools stay in this repo. Note: localStorage saves are per-origin — players on the site
-keep separate progress from localhost. ROADMAP M6 has the automation task.
+A gameplay change is complete only when:
 
-Other static hosts (GitHub Pages, itch.io) also work if ever needed.
+1. The intended source is committed and pushed to `SYL-Full-Game`.
+2. Relevant tests and browser checks pass.
+3. The canonical client files are deterministically synchronized into the
+   Heartbeat repository's `games/syl/` mirror.
+4. That website-repository change is committed and pushed.
+5. The exact public URL returns successfully without authentication and the
+   changed flow is exercised without console/network errors.
+6. Phone-facing work is tested by Jaron on his physical phone.
+
+Vercel currently deploys the website repository's `main` branch. Do not claim a
+source-repository push changed production until the website mirror and public
+URL have both been verified.
+
+The current client mirror consists of `index.html`, `lib/`, `src/`, and the
+approved contents of `assets/`. `desktop.html`, `src/desktop/`, and
+`assets/desktop/` are legacy/on-hold experiment files, not a second product
+that future sync automation should promote.
+
+The repository still needs a checked deterministic sync tool. Until that tool
+exists, compare source and destination manifests before copying, review the
+website diff, and stage only the intended `games/syl/` files. Never run an
+unverified recursive delete against a computed path.
+
+## Preview safety
+
+`/games/syl-test/` is not approved V2 staging. It shares the production origin,
+and the legacy client defaults to the same `syl_save` key. A future preview must
+have an isolated route or origin, save namespace, backend environment, audit
+state, and deployment verification before it receives risky world changes.
+
+## Authoritative services
+
+The Three.js client may remain statically hosted while authenticated,
+authoritative universe services run separately. Static hosting does not mean
+the full game is client-authoritative or permanently “fully static.” Service
+topology follows `docs/architecture/SERVER_AUTHORITY.md`.
 
 ## Disaster recovery
-Everything lives in git. Rebuilding a machine = clone + Node. The only
-generated artifact is `node_modules/three` (a 2-file shim auto-written by
-`npm test`) — gitignored, recreated on demand.
 
-## The Unreal mapping (for the SpaceYouLand/Kurearthis lane)
+All source, canon, migrations, deployment tooling, and generated-asset recipes
+belong in git. Canonical server state will require database backups, immutable
+audit checkpoints, content-addressed terrain/entity snapshots, and tested
+replay recovery in addition to source control.
 
-This foundation's architecture is deliberately 1:1 with the proven Unreal
-pieces, so an Unreal agent can port system by system:
-
-| This repo | Unreal equivalent (exists in Kurearthis/SpaceYouLand) |
-|---|---|
-| engine.js floating origin | `AFloatingOriginManager` (proven, 2c) |
-| f64 world positions | UE Large World Coordinates (64-bit, confirmed to 88M km) |
-| planet.js analytic terrain | `SurfaceTileManager`/`ProcTerrainTile` sampling ONE height fn; giant mesh = visual only, NoCollision (proven, 2d/2e) |
-| player.js radial movement | `ARadialGravityPawn` custom movement (proven, 2f) |
-| ship.js swept integrator | `ASweptGravityBody` pattern: integrate + swept move, no Chaos forces (proven, 2e) |
-| bodies.js registry | `BP_SYL_CelestialBody` data-driven fields (exists) |
-| traversal.js derived phases | same derivation from altitude/velocity/dominant body |
-| shipParts/shipBuilder | modular gunship + per-module components (gunship exists; slots to build) |
-| save.js payload | SaveGame object with identical shape |
-
-The official serious game path is Unreal/Unity. Unreal is the better-documented
-lane today because SpaceYouLand/Kurearthis already contain proofs there; Unity
-work should preserve the same boundaries: floating origin, one terrain-height
-source, custom high-precision movement, data registries, modular ships, and
-versioned persistence.
-
-Kurearthis's hard-won gotchas that MUST carry over: never let a true-scale mesh
-provide physics contacts (even query-only blocks sweeps kilometers early);
-Chaos `AddForce` integrates 10–100× wrong — drive motion kinematically;
-walkable-ship collision law: only hull + landing pads join the rigid body.
+The current V1 `node_modules/three` test shim is generated and ignored; `npm
+test` recreates it.

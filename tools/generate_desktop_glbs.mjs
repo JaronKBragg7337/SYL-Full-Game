@@ -1,3 +1,6 @@
+// LEGACY/ON-HOLD: generates the three primitive desktop experiment GLBs from
+// boxes and cylinders. This is not the V2 production asset pipeline or quality
+// reference. See docs/assets/ASSET_PROVENANCE.md.
 import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 

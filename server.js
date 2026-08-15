@@ -2,8 +2,8 @@
 // server.js — zero-dependency static file server for local play.
 // Run: node server.js  →  http://localhost:8377
 // (ES modules require http://, not file:// — that is this file's only job.)
-// Deployment note: the game is fully static; any static host (Vercel, GitHub
-// Pages, itch.io) serves it as-is. See PORTABILITY.md.
+// This serves only the current Three.js client. Canonical SYL requires separate
+// authoritative universe services; this local helper is not that backend.
 // ============================================================================
 import { createServer } from 'http';
 import { readFile } from 'fs/promises';

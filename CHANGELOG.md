@@ -1,5 +1,30 @@
 # CHANGELOG.md
 
+> Historical record only. Older entries preserve what was believed and shipped
+> at the time; they never override [CANON.md](CANON.md).
+
+## 0.4.1 — 2026-08-15 — Canon and product-direction correction (Builder: Codex)
+
+- Established the owner-supplied v3.0.1 Universe Codex as a locked repository
+  artifact, with append-only amendments, precedence, SHA-256 integrity testing,
+  and implementation traceability.
+- Corrected active documentation and source comments: SYL is permanently the
+  full Three.js browser game at `https://www.heartbeatobservatory.com/games/syl/`,
+  with one responsive full-fidelity phone/desktop-browser client. Unreal and
+  Unity are not destinations; the separate desktop experiment is on hold.
+- Added architecture contracts for true server authority, physical observability,
+  volumetric material planets, conserved excavation, exact spatial graphs,
+  component/connector assemblies, and persistent physical damage.
+- Added an asset provenance policy and machine-readable manifest with checksums
+  for the three existing generated legacy GLBs; added the repository MIT license.
+- Labeled current V1 shell terrain, localStorage saves, peer-broadcast presence,
+  placeholder factions, procedural map assets, and unused expansion files
+  honestly as migration debt.
+- Removed three obsolete one-time GitHub workflows that could patch and push
+  directly to `main` when triggered by magic commit messages; replaced them
+  with an ordinary read-only regression/canon/provenance workflow.
+- Added seven product/canon/provenance regression checks. Tests: 150/150.
+
 ## 0.4.0 — 2026-07-09 — Form-language pass (Builder: Claude, Fable 5)
 - Ship rebuilt as one connected extruded hull + fin + canopy + tapered wings
   + engine pylons/intakes (was slab boxes). Interior + colliders unchanged.

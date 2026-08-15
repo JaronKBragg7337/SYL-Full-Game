@@ -1,46 +1,67 @@
-# CLAUDE.md — Operating Manual (all agents; auto-loaded by Claude Code)
+# CLAUDE.md — Repository Operating Manual
 
-Project: **SYL — Space You Land, Foundation Build** (browser/Three.js).
-Owner: Jaron. You are his building partner. He tests feel; you build, verify, log.
+This file is auto-loaded by Claude Code but applies to every model working in
+the repository.
 
-## How to run
-- Play: `node server.js` → http://localhost:8377 (or START_GAME.cmd on Windows).
-- Test: `npm test` (headless; includes a full Earth→space→Moon-landing sim).
-- No install step. No bundler. `lib/three.module.js` is vendored — import it
-  via the import map ('three'); tests use the node_modules shim auto-written
-  by test/run_tests.mjs.
+Project: **SYL — Space You Land**, the permanent Three.js browser game
 
-## Rules of the codebase
-- One system per file, header comment states ownership. main.js is bootstrap +
-  loop order ONLY.
-- All gameplay positions are f64 world-space; meshes get positions from the
-  floating-origin sync in engine.js. Never bypass it.
-- Ground truth for terrain is `terrainRadiusAt()` in planet.js. All collision
-  and all visuals derive from it. Never add a second height source.
-  (Since 2026-07-04 it is MESH-TRUE: it interpolates the rendered mesh's own
-  vertex grid, so collision equals the picture exactly. Terrain LOD must keep
-  collision sampling whatever the player currently sees.)
-- No physics library. Player and ship integrate their own motion (see
-  ARCHITECTURE.md for the measured evidence behind this).
-- Data-driven registries (bodies, factions, parts, items). Content changes are
-  data edits; system changes are rare and documented.
-- Saves: bump SAVE_VERSION + migrate; old saves keep working.
+Owner: Jaron K. Bragg
+Public game: https://www.heartbeatobservatory.com/games/syl/
 
-## Verification bar for "done"
-1. `npm test` green (add tests for new systems).
-2. Game boots clean (no console errors) and the affected path plays.
-3. HANDOFF.md top entry updated (template inside), CHANGELOG.md line added.
-4. Committed. Pushed if credentials exist.
+Read `CANON.md`, the canon sources it lists, and `AGENTS.md` before acting.
 
-## Talking to Jaron
-- Plain language, concrete and visual: what exists, what you verified, what's next.
-- Ask him for hands-on feel tests (flight feel, camera, landing difficulty);
-  automate everything structural yourself.
-- He explicitly welcomes "made by Claude/Codex" signatures and easter eggs.
+## Run and verify
 
-## Known environment
-- Jaron's machine: Windows (MSI), Node 22 available. Unreal Engine 5.8 also
-  installed (the separate SpaceYouLand/Kurearthis Unreal lane — see
-  PORTABILITY.md for how this foundation maps there).
-- GitHub: github.com/JaronKBragg7337 (SpaceYouLand, Kurearthis, fable-survival
-  are the sibling repos this foundation was distilled from).
+- Start the current client: `node server.js` → `http://localhost:8377/`
+- Test: `npm test`
+- Three.js is currently vendored through the import map.
+- Localhost is development-only. Public gameplay handoff uses the canonical URL.
+
+## Product and client rules
+
+- Three.js/web is the finished-product runtime, not a temporary porting lane.
+- One responsive client serves phone and desktop browsers. Phone with touch
+  controls is the primary reference experience.
+- Never cut fidelity merely because a feature runs on a phone. Measure the
+  deployed game on Jaron's physical device before making a performance claim.
+- `desktop.html` is a legacy/on-hold experiment and receives no new product work
+  unless Jaron explicitly revives it.
+
+## State and physical-world rules
+
+- The current V1 client is not server-authoritative. Its localStorage saves,
+  local movement, transport, and Realtime broadcasts are legacy implementation.
+- V2 clients submit intentions; authoritative services validate and commit
+  consequential state; Three.js renders accepted outcomes.
+- Gameplay positions use f64 world/body/local frames. Mesh transforms are
+  render projections only.
+- The V1 `terrainRadiusAt()` shell is not the V2 terrain contract. V2 planets
+  are procedural solid geology plus sparse persistent edits, supporting caves,
+  tunnels, underground construction, craters, and conserved material.
+- Assets are measured component assemblies with stable identities, connectors,
+  material zones, collision, navigation effects, and state-driven animation.
+- Global planetary motion keeps the custom f64 integration pattern. Local,
+  rebased rigid-body islands may be introduced after measurement for detached
+  parts, cargo, vehicles, and other bounded physical interactions.
+- Old saves and stable IDs require explicit migration; do not silently reinterpret
+  them.
+
+## Repository structure
+
+- One owned system per module; keep `src/main.js` focused on bootstrap and loop
+  ordering.
+- Registries remain data-driven, but V1 placeholder data does not become canon
+  through reuse.
+- New assets follow `docs/assets/ASSET_PROVENANCE.md`.
+- New server/world work follows `docs/architecture/SERVER_AUTHORITY.md` and
+  `docs/architecture/PHYSICAL_WORLD_CONTRACT.md`.
+
+## Done means
+
+1. Relevant automated checks pass.
+2. The affected path is browser-verified without console/network errors.
+3. Phone-facing work is tested on the deployed URL and handed to Jaron for the
+   physical-device feel check.
+4. `HANDOFF.md`, `CHANGELOG.md`, and any invalidated active docs are updated.
+5. Source is committed and pushed. Gameplay changes are synced to the website
+   repository and the canonical public URL is verified.

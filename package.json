@@ -1,12 +1,17 @@
 {
-  "name": "syl-foundation",
-  "version": "0.4.0",
-  "description": "Space You Land — world-scale space game foundation (browser/Three.js). Multiple planets, real surface-to-space traversal, modular piece-by-piece ships, factions, persistence.",
+  "name": "space-you-land",
+  "version": "0.4.1",
+  "description": "Space You Land — the permanent Three.js persistent physical-universe game for phone and desktop browsers.",
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "test": "node test/run_tests.mjs"
   },
-  "author": "Jaron + Claude (Fable 5)",
+  "author": "Jaron K. Bragg and contributors",
+  "homepage": "https://www.heartbeatobservatory.com/games/syl/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JaronKBragg7337/SYL-Full-Game.git"
+  },
   "license": "MIT"
 }

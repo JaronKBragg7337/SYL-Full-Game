@@ -1,5 +1,5 @@
 // ============================================================================
-// run_tests.mjs — headless verification of the SYL foundation. `npm test`.
+// run_tests.mjs — headless regression checks for the current SYL V1 client.
 //
 // OWNS: automated acceptance checks that run in Node with no browser:
 //   registry integrity, terrain/collision agreement, gravity math, ship
@@ -13,6 +13,7 @@
 // a tiny node_modules/three shim pointing at the vendored lib. Idempotent.
 // ============================================================================
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs';
+import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 import { join } from 'path';
 
@@ -71,6 +72,41 @@ function check(name, cond, detail = '') {
   else { fail++; console.log(`  FAIL  ${name} ${detail}`); }
 }
 
+function sha256File(path) {
+  return createHash('sha256').update(readFileSync(path)).digest('hex');
+}
+
+console.log('\n== 0. Product truth and locked canon ==');
+const canonicalUrl = 'https://www.heartbeatobservatory.com/games/syl/';
+const canonIndex = readFileSync(join(ROOT, 'CANON.md'), 'utf8');
+const biblePath = join(ROOT, 'docs', 'canon', 'SYL_UNIVERSE_CODEX_v3.0.1.md');
+const bibleHash = sha256File(biblePath);
+const expectedBibleHash = '347b809e9205a574f94b4c624f92f8588fdb74dccafd596585068a54138d57ec';
+const packageMeta = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+const assetManifest = JSON.parse(readFileSync(join(ROOT, 'assets', 'manifest.json'), 'utf8'));
+const indexHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
+
+check('canon names the exact public SYL URL', canonIndex.includes(canonicalUrl));
+check('canon fixes Three.js as the permanent engine',
+  canonIndex.includes('full, permanent Three.js browser game'));
+check('locked v3.0.1 Bible hash matches CANON.md',
+  bibleHash === expectedBibleHash && canonIndex.includes(expectedBibleHash), bibleHash);
+check('package identity points at the canonical game',
+  packageMeta.name === 'space-you-land' && packageMeta.homepage === canonicalUrl);
+check('public document no longer labels SYL a foundation build',
+  indexHtml.includes('<title>SYL — Space You Land</title>') && !/foundation build/i.test(indexHtml));
+check('asset provenance manifest has unique, complete local records',
+  assetManifest.assets.length > 0 &&
+  new Set(assetManifest.assets.map(asset => asset.assetId)).size === assetManifest.assets.length &&
+  assetManifest.assets.every(asset =>
+    asset.assetId && asset.status && /^[a-f0-9]{64}$/.test(asset.sourceChecksumSha256) &&
+    Array.isArray(asset.localFiles) && asset.localFiles.length > 0));
+check('every recorded local asset exists and matches its provenance checksum',
+  assetManifest.assets.every(asset => asset.localFiles.every((relativePath) => {
+    const localPath = join(ROOT, ...relativePath.split('/'));
+    return existsSync(localPath) && sha256File(localPath) === asset.sourceChecksumSha256;
+  })));
+
 // Stub engine (no WebGL needed to construct meshes/groups).
 const stubEngine = { scene: { add() {} }, trackWorldObject(e) { return e; }, untrackWorldObject() {} };
 
@@ -85,7 +121,8 @@ check('every landing zone id unique', (() => {
   return new Set(ids).size === ids.length;
 })());
 check('7 factions registered', FACTIONS.length === 7, `got ${FACTIONS.length}`);
-check('Fortis is canon (not placeholder)', FACTIONS.find(f => f.id === 'fortis')?.placeholder === false);
+check('legacy Fortis entry remains the one non-placeholder V1 faction',
+  FACTIONS.find(f => f.id === 'fortis')?.placeholder === false);
 check('item registry resolves ship part items', ITEMS.filter(i => i.kind === 'part').every(i =>
   i.partId && !!PART_TYPES[i.partId]));
 check('ship slot ids unique', new Set(SLOTS.map(s => s.slotId)).size === SLOTS.length);
@@ -113,9 +150,9 @@ check('civil transport stops reference real transit bases', CIVIL_TRANSPORT_STOP
 {
   const indexHtml = readFileSync(join(ROOT, 'index.html'), 'utf8');
   const desktopHtml = readFileSync(join(ROOT, 'desktop.html'), 'utf8');
-  check('mobile-safe index still boots src/main.js',
+  check('canonical responsive entry boots src/main.js',
     indexHtml.includes('src="./src/main.js"') && !indexHtml.includes('desktopMain.js'));
-  check('desktop entry boots src/desktopMain.js',
+  check('preserved legacy desktop entry still boots src/desktopMain.js',
     desktopHtml.includes('src="./src/desktopMain.js"'));
   check('desktop GLB assets are present',
     ['fortis-gunship.glb', 'fortis-habitat.glb', 'industrial-prop.glb']
@@ -141,7 +178,7 @@ const earth = getBody('earth');
   const up = upAt(earth, surface);
   check('up is radial unit', Math.abs(up.length() - 1) < 1e-9 && up.dot(dir) > 0.999);
   // Gravity reference is the BASE radius; terrain sits slightly above/below,
-  // so sample at exactly r=radius for the canonical value.
+  // so sample at exactly r=radius for the configured reference value.
   const atBase = dir.clone().multiplyScalar(earth.radius).add(earth._centerV);
   const g0 = gravityAt(earth, atBase).length();
   check('surface gravity ≈ 9.81 at base radius', Math.abs(g0 - 9.81) < 1e-6, `g=${g0.toFixed(4)}`);
@@ -589,7 +626,7 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const endFwd = new THREE.Vector3(0, 0, 1).applyQuaternion(t.quaternion);
   check('assisted bank button turns ship nose and rolls', startFwd.dot(endFwd) < 0.85 && Math.abs(t.assistRoll) > 0.2,
     `dot=${startFwd.dot(endFwd).toFixed(2)} roll=${(t.assistRoll || 0).toFixed(2)}`);
-  check('local ship visual is wired to authoritative rotation', t._trackEntry.quaternion === t.quaternion,
+  check('local ship visual is wired to client-simulation rotation', t._trackEntry.quaternion === t.quaternion,
     'track entry missing ship quaternion');
 }
 {

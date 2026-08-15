@@ -1,131 +1,138 @@
-# SYL — Space You Land (Foundation Build)
+# SYL — Space You Land
 
-The hard playable foundation for **Space You Land**: a world-scale space game with
-multiple planets, real surface→space→surface traversal (no loading screens, no
-teleports), a modular piece-by-piece ship, factions, and persistence.
+Space You Land is a permanent Three.js browser game: a server-authoritative,
+persistent 3D galaxy where players physically fly, walk, trade, fight, build,
+govern, excavate, transport material, damage infrastructure, and rebuild the
+world they change.
 
-Built by Claude (Fable 5) for Jaron, 2026-07-03, as the bridge foundation other
-agents (Claude, Codex, Opus) continue. **Read AGENTS.md before touching anything.**
+**Play the public game:** https://www.heartbeatobservatory.com/games/syl/
 
-## Play it
+**Source repository:** https://github.com/JaronKBragg7337/SYL-Full-Game
 
-**Live (anyone, any device incl. phones):** https://heartbeatobservatory.com/games/syl/
+The browser game is the full product. It is not an Unreal Engine or Unity
+prototype. There is one responsive Three.js client with mobile controls. Phone
+is a primary, full-fidelity target; desktop browsers run the same game.
 
-Local dev (Windows, zero installs beyond Node): double-click **`START_GAME.cmd`**,
-or `node server.js` → http://localhost:8377. That is the default local URL; if
-8377 is already busy, agents may test with `PORT=8378 node server.js`, but the
-normal documented path stays 8377. Click the game for mouse control; on touch
-devices the joystick/buttons appear automatically.
+Read [`CANON.md`](CANON.md) before interpreting the code or changing the game.
+The locked universe Bible and accepted amendments outrank old handoffs, tests,
+comments, and current implementation details.
 
-**Desktop fidelity lane:** run the same server and open
-http://localhost:8377/desktop.html. This is a separate RTX-class browser route
-with scaled desktop-only bodies, PBR procedural terrain, GLB ship/building/prop
-models, HDR-style lighting, shadows, and bloom. The normal `index.html` phone-safe
-route is unchanged and keeps the public/mobile budget.
+## Current state
 
-**The bigger picture:** this repo is the living blueprint and public playtest
-for the official SYL game (Unreal/Unity — see VISION.md "The official game"
-and ROADMAP Milestone 7). Target: EVE-style planet-to-planet open world,
-KSP-style ship building, DayZ/ARC Raiders/Battlefield-style PVP.
+The live V1 build is a useful planetary-traversal prototype now being rebuilt
+in this repository as SYL V2. V1 proves several reusable techniques:
 
-**Promoted July 4, 2026:** the Kimi expansion content, Heartbeat Realtime
-visibility MVP, and ship turning fix are now part of `main` and the public
-`/games/syl/` route. The old `/games/syl-test/` lane can stay available as an
-unlisted preview lane for future risky changes.
+- f64 world positions with camera-relative Three.js rendering
+- radial walking and planetary gravity
+- continuous surface-to-space-to-surface travel
+- data-driven celestial bodies
+- modular ship state
+- touch and keyboard/mouse controls
 
-## The loop that exists right now
+V1 is not the finished design. Its scattered surface dressing, fake roads,
+sealed primitive buildings, placeholder factions, localStorage authority,
+client-broadcast multiplayer, radial shell terrain, and randomized scalar ship
+damage are migration debt. Do not treat them as canon or extend them as the V2
+world model.
 
-You spawn on **Earth** at the **Fortis Outpost**. Your gunship on the pad is damaged:
-dead engine, missing power cell, missing landing gear, empty tanks.
+The separate `desktop.html` route is a preserved, on-hold experiment. It is not
+a PC edition, not a higher-fidelity destination, and not a second product lane.
+Future work targets the one responsive game launched by `index.html`.
 
-1. **Gather** salvage crates around the outpost and nearby **Fortis Salvage Yard**
-   (walk up, press **F**). Crates are persistent one-shot pickups today; resource
-   node respawn is a future system.
-2. **Repair & build** at the ship (press **B**): repair the engine with alloy, install
-   the power cell and gear strut, load hydrazine fuel. The builder shows honest
-   readiness: mass, thrust, TWR, power budget.
-3. **Board** (**E**) and take off — **W** throttles up, **Space** gives vertical thrust.
-4. Climb through the atmosphere — sky thins into starfield, continuously.
-5. Open the body map (**M**), burn toward the **Moon** (or **Rustholm**), brake with
-   **X** on approach, descend, and land gently (under ~16 m/s or you damage modules).
-6. Landing at a marked zone **discovers** it — faction contact, salvage reward, autosave.
-7. If you do not want to fly, walk to a civil terminal and press **E** to board
-   the automated public transport. It rides a visible ship between Earth, Moon,
-   Aethelgard, Pyrrhus, Veldora, Dunewind, and Rustholm, then lets you
-   disembark at each base.
-8. Landing zones now have more world dressing around them: small settlements,
-   city blocks, roads, terminal canopies, trees/forests, rocks, ice spires,
-   volcanic vents, desert windbreaks, and harbor pylons depending on the body.
-9. Additional bodies/zones carry test crates with
-   expanded resources and ship parts.
-10. Open **I** for inventory and crafting. Crafting is intentionally simple:
-   buttons are enabled only when the carried inputs are present.
-11. **F5** saves, **F9** loads, autosave every 60 s.
+## Run locally
 
-## Controls
+Requirements: Node 18 or newer and a browser. Three.js is vendored, so no
+package installation is required.
 
-On foot: **WASD** move · **Shift** run · **Space** jump · **E** board ship / board or exit civil transport · **F** gather
-Ship: **W/S** forward/reverse · **A/D** strafe · **Q/R** turn-bank · **↑/↓** nose pitch in high flight · **Z** descend ·
-locked forward chase camera · **Space** climb · **X/Ctrl** brake · **G** gear ·
-**C** cockpit/chase camera · **V** interior view (while piloting or passenger) · **T** toggle door/ramp · **E** exit (landed)
-Touch ship: left stick lifts/drives/strafes; right **ATTITUDE** stick gently
-banks and pitches the ship with diagonal drift filtering; **DESCEND** overrides
-lift so you can guide the ship down. Ship chase camera is locked behind/above
-the nose so turns stay readable.
-Panels: **B** ship builder · **I** inventory · **M** bodies + civil transport line · **O** settings · **H** help ·
-**Close** button / **Esc** / same key closes panels · **F5/F9** save/load
-
-Builder/dev tools: add `?dev=1` to the URL to reveal the **DEV** button. It can
-ready a mobile-safe test ship, give a supply kit, move the ship to you, save, and
-toggle fly-person mode for testing. Fly-person uses WASD, mouse/touch look,
-Space up, X/Ctrl down, Shift fast. The tools are code-built and phone-safe; no
-heavy external assets are required.
-
-## Verify it works
-
+```text
+node server.js
 ```
-npm test        # 124 headless checks incl. controls, touch ship steering, collision, world detail layers, Earth→Moon sim, civil transport, transport fleet, settings, space props, ship interiors, registries, crafting, dev tools, desktop coexistence
+
+Open `http://localhost:8377/`. On Windows, `START_GAME.cmd` does the same thing.
+Localhost is for development; the public URL is the handoff target.
+
+## Current live V1 loop
+
+The public build currently spawns the player near a damaged ship on Earth. The
+player can gather salvage, repair and fuel the modular ship, launch without a
+loading screen, fly between bodies, land, discover zones, craft items, ride a
+client-simulated transport, and save locally.
+
+This loop remains available while V2 replaces its presentation and authority
+in deliberate slices. Current map dressing is disposable. Planet identities,
+useful traversal math, and stable migration data are preserved where they pass
+the new contracts.
+
+## Controls in the current build
+
+**On foot:** WASD move · Shift run · Space jump · E interact/board · F gather
+
+**Ship:** W/S forward/reverse · A/D strafe · Q/R turn-bank · arrows pitch ·
+Space climb · Z descend · X/Ctrl brake · G gear · C camera · V interior view ·
+T door/ramp · E exit when landed
+
+**Panels:** B ship builder · I inventory · M bodies · O settings · H help ·
+F5 save · F9 load
+
+Touch controls appear automatically. Phone behavior is verified on the actual
+deployed page and Jaron's physical phone, not inferred from desktop emulation.
+No feature or fidelity is removed merely because the client is on a phone.
+
+## Verify the repository
+
+```text
+npm test
 ```
-Manual pass: see HANDOFF.md → "How to verify".
 
-## Where everything lives
+The headless suite checks the current V1 implementation. Passing it prevents
+regressions, but it does not prove the locked Bible is implemented. Every V2
+slice must add acceptance tests for server authority and for the physical world
+consequence a player can witness.
 
-| System | File |
-|---|---|
-| Game loop / bootstrap only | `src/main.js` |
-| Desktop high-fidelity bootstrap | `desktop.html`, `src/desktopMain.js`, `src/desktop/*`, `assets/desktop/*.glb` |
-| Renderer + **floating origin** | `src/core/engine.js` |
-| Noise/terrain math (single source of truth) | `src/core/math3d.js` |
-| Planet/body **data registry** | `src/world/bodies.js` |
-| Kimi expanded body registry | `src/world/bodies_expanded.js` |
-| Terrain, gravity, atmosphere, analytic collision | `src/world/planet.js` |
-| Visual-only settlements, roads, forests, biome dressing | `src/world/worldDetails.js` |
-| Civil transport route + rideable public ship | `src/world/civilTransport.js` |
-| Space props / debris field (visual-only) | `src/world/spaceProps.js` |
-| Settings (mouse/touch sens, graphics, sound) | `src/ui/settings.js` |
-| World progress state | `src/world/worldState.js` |
-| Pickup placement | `src/world/pickups.js` |
-| Surface⇄space **state machine** | `src/world/traversal.js` |
-| On-foot radial-gravity player | `src/player/player.js` |
-| Ship entity + 6DOF flight | `src/ship/ship.js` |
-| **Modular ship parts/slots** | `src/ship/shipParts.js` |
-| Kimi expanded ship parts/slots | `src/ship/shipParts_expanded.js` |
-| Install/remove/repair/refuel | `src/ship/shipBuilder.js` |
-| Faction registry + standings | `src/factions/factions.js` |
-| Items / inventory | `src/items/items.js`, `src/inventory/inventory.js` |
-| Kimi expanded items / crafting | `src/items/items_expanded.js`, `src/crafting/recipes.js` |
-| Save/load (localStorage, backend-ready) | `src/save/save.js` |
-| HUD/panels | `src/ui/ui.js` |
-| Touch controls | `src/ui/touch.js` |
-| Dev/editor tools | `src/dev/devTools.js` |
-| Headless tests | `test/run_tests.mjs` |
+## V2 foundation order
 
-## Docs
+1. Canon, repository truth, and deterministic source-to-site delivery.
+2. Coherent world scale, stable IDs, spatial addressing, and authoritative
+   server command/audit contracts.
+3. Solid volumetric planets with strata, caves, persistent edits, and conserved
+   excavated material.
+4. Component-and-connector asset assemblies with location-aware damage,
+   detachment, pressure, power, and salvage consequences.
+5. One Fortis Recovery Corridor proving a walkable ship, physical cargo, a
+   graded road, real interiors, Custodian containment, YOM reconstruction, and
+   persistent visible change.
+6. Broader economy, governance, territory, factions, stations, fleets, storms,
+   Cognitive Frameworks, and expansion after the foundational laws hold.
 
-`VISION.md` (what SYL is) · `ARCHITECTURE.md` (why it's built this way) ·
-`AGENTS.md` + `CLAUDE.md` (how agents work here) · `HANDOFF.md` (session log) ·
-`ROADMAP.md` (what's next) · `CONTROLS_CAMERA_VEHICLES_GUIDE.md` (where to wire
-ship controls/camera/vehicle behavior) · `DEV_GOD_MODE_ROADMAP.md` (dev tools,
-prefabs, snap builder, walk-in vehicles) · `DECISIONS.md` (real vs approximated
-— read this) · `PORTABILITY.md` (moving/deploying/live-site sync) ·
-`CHANGELOG.md`.
+See [`ROADMAP.md`](ROADMAP.md) for acceptance gates and sequencing.
+
+## Repository map
+
+| Area | Location | Truth today |
+|---|---|---|
+| Canon index | `CANON.md` | Governing precedence |
+| Locked Bible and amendments | `docs/canon/` | Product canon |
+| V2 architecture contracts | `docs/architecture/` | Required target behavior |
+| Browser entry | `index.html`, `src/main.js` | Canonical Three.js client |
+| Floating-origin rendering | `src/core/engine.js` | Useful V1 foundation |
+| Body registry | `src/world/bodies*.js` | IDs/data to migrate and rescale |
+| Current shell terrain | `src/world/planet.js` | Legacy V1; not volumetric |
+| Current map dressing | `src/world/worldDetails.js` | Disposable V1 presentation |
+| Current player/ship traversal | `src/player/`, `src/ship/`, `src/world/traversal.js` | Reuse after V2 validation |
+| Current saves | `src/save/save.js` | Legacy local cache, not universe truth |
+| Current multiplayer | `src/multiplayer/multiplayer.js` | Visibility only, not authority |
+| Legacy desktop experiment | `desktop.html`, `src/desktop/`, `assets/desktop/` | On hold |
+| Tests | `test/run_tests.mjs` | V1 regression suite |
+
+## Public delivery
+
+`SYL-Full-Game` is the canonical source repository. The website repository
+`heartbeat-observatory` hosts a deployed mirror at `games/syl/`. A finished
+gameplay change is not done until both repositories contain the intended source
+and the exact public URL has been verified without login.
+
+Do not use `/games/syl-test/` as V2 staging. The current route shares the same
+origin and legacy save key as production. V2 needs an explicitly isolated
+preview before risky gameplay promotion.
+
+Deployment details live in [`PORTABILITY.md`](PORTABILITY.md).

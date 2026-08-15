@@ -1,85 +1,195 @@
-# ARCHITECTURE.md — Why It's Built This Way
+# ARCHITECTURE.md — Space You Land V2
 
-Decisions here are deliberate and mostly EVIDENCE-BACKED by the Kurearthis
-Unreal proofs. Don't "improve" them away without a documented reason and a
-HANDOFF.md entry. Read DECISIONS.md for the real-vs-approximated ledger.
+This architecture derives from `CANON.md`. It separates proven V1 techniques
+from mandatory V2 replacements so historical code cannot masquerade as the
+finished system.
 
-## The three load-bearing ideas
+## Governing data flow
 
-### 1. Floating origin (camera-relative rendering) — `src/core/engine.js`
-GPU vertex math is float32; physics engines are float32 internally. Kurearthis
-proved (proofs 2b/2c, measured, logged) that at planetary coordinates
-(~6,371 km from origin) stock physics is unusable: forces integrate 10–100×
-wrong, bodies get ejected by imprecise contacts. The proven fix is keeping the
-ACTIVE REGION numerically small. Here: all authoritative positions are float64
-(plain JS numbers), the render camera is pinned at (0,0,0), and every mesh is
-placed at `worldPos - cameraWorldPos` each frame. The player can fly millions
-of meters with zero jitter. NEVER store gameplay state in mesh positions.
-
-### 2. Analytic terrain = collision AND visuals — `src/world/planet.js` + `src/core/math3d.js`
-Kurearthis proved a planet must never be one giant collision mesh (proof 2c/2d:
-glitchy contacts, false blocking 1 km above the surface). Instead of streaming
-local collision patches (the Unreal answer), the browser build does something
-stronger: the ground is a pure function `terrainRadiusAt(body, direction)` —
-deterministic noise, float64, valid everywhere at any distance. The rendered
-mesh is a picture of that function; collision queries ARE that function.
-Visuals and physics cannot disagree. Landing-zone flattening happens INSIDE the
-function, so pads are flat in both. If you add terrain detail, you must go
-through this one function (LOD meshes sample it; never a second height source).
-
-### 3. Custom double-precision integrators — `src/player/player.js`, `src/ship/ship.js`
-Kurearthis proof 2e/2f: motion must be integrated directly (set velocity, swept
-move, ground clamp), not driven through a physics engine's force solver. There
-is deliberately NO physics library in this project. The player is the ported
-RadialGravityPawn: local up = radial, tangential input, gravity integration,
-analytic ground clamp, capsule re-orientation tracking the sphere's curvature.
-The ship is a 6-DOF integrator: thrust → N-body gravity (every body pulls,
-always — "second-body coexistence") → integrate → analytic ground contact with
-soft-landing vs crash-damage outcomes.
-
-## Layer separation (one system per file — fable-survival law)
-
+```text
+player intention
+  → authoritative validation
+  → atomic state + audit event
+  → physical-world materialization
+  → interest-managed client state
+  → Three.js rendering, sound, controls, and prediction
 ```
-DATA:      bodies.js, shipParts.js, factions.js, items.js     (registries — pure data)
-STATE:     worldState.js, inventory.js, FactionState, Ship modules   (serializable)
-EMBODIMENT:planet.js meshes, ship visual, player body          (pictures of state)
-RULES:     shipBuilder.js, traversal.js                        (state transitions)
-IO:        engine.js (render+input), ui.js (DOM), save.js (persistence)
-WIRING:    main.js (bootstrap + loop order ONLY — never logic)
+
+Clients never create canonical position, damage, cargo, credits, ownership,
+terrain edits, construction, enforcement, or political outcomes. They predict
+for responsiveness and reconcile to accepted server state.
+
+## Load-bearing rules
+
+### 1. Permanent Three.js client
+
+Three.js is the production renderer and interaction client. The same responsive
+client supports touch and keyboard/mouse. A separate PC edition or future engine
+port is outside the product direction.
+
+The current import-map/vendored-module setup is an implementation choice, not a
+canon law. Bundling, workers, WASM, compressed textures, and other web tooling
+may be adopted when measured needs justify them.
+
+### 2. Hierarchical f64 frames
+
+Canonical positions use double-precision hierarchical frames:
+
+- system/inertial frame
+- celestial-body frame
+- surface-local east/north/up frame
+- station or structure frame
+- moving ship-local frame
+
+Three.js receives float32-friendly coordinates relative to the active camera or
+chunk origin. Mesh transforms are projections, never durable world state.
+
+V1's camera-relative rendering in `src/core/engine.js` is useful evidence and
+should be preserved. V1 client positions remain local simulation state until
+the authoritative server exists.
+
+### 3. Authoritative universe services
+
+The initial backend should be modular rather than prematurely split into many
+services:
+
+- session/API gateway
+- universe and spatial-lease coordinator
+- authoritative hot-zone simulation
+- identity, faction, ownership, inventory, economy, station, governance,
+  territory, stability, enforcement, mission, storm, expansion, and Cognitive
+  Framework modules
+- warm/cold simulation workers
+- append-only audit journal and transactional outbox
+- physical-state materializer
+- isolated AI proposal service
+
+PostgreSQL/PostGIS is the intended canonical store. Redis or Realtime presence
+may cache ephemeral state but never becomes truth. Consequential transactions
+commit domain state, audit records, and outbound events atomically.
+
+`server.js` currently serves static client files only. `src/multiplayer/` is a
+legacy visibility layer where clients broadcast their own state. Neither is the
+V2 authority.
+
+### 4. One material planet truth
+
+V1 `terrainRadiusAt(body, direction)` is a radial height shell with only one
+surface per direction. It cannot express caves, overhangs, tunnels, underground
+rooms, or conserved excavation. Its current visual/collision agreement is worth
+preserving as a principle, not as the final representation.
+
+V2 terrain is:
+
+```text
+versioned procedural solid geology + sparse accepted edits
+  = authoritative material field
 ```
-Every module's header comment states what it owns, what it does not own, and
-how to extend it. Keep it that way; it's what makes agent sessions cheap.
 
-## The traversal state machine — `src/world/traversal.js`
-Modes: ON_FOOT ⇄ PILOTING. Flight phases (LANDED, TAKEOFF, ATMOSPHERE, SPACE,
-APPROACH, DESCENT) are **derived from real physical quantities** every frame —
-altitude, vertical velocity, dominant body. The machine never sets positions;
-it only names what is happening and gates interactions. This is what makes the
-no-loading-screens chain real: there is no code path that could teleport you.
+A body-local query returns solid/void state, signed distance, material,
+composition, density, strength, mineability, and revision. The generator
+provides strata, faults, resource bodies, natural caves, and immutable deep
+material without storing a planet-wide voxel array. Sparse chunks exist around
+exposure, excavation, construction, and damage.
 
-## Why browser/Three.js for the foundation?
-Runs instantly on any machine (including Jaron's MSI) with zero installs,
-which makes every architectural idea testable in minutes, headlessly (`npm test`
-simulates the full Earth→Moon trip in Node). The architecture maps 1:1 onto the
-Unreal build (PORTABILITY.md has the table). fable-survival proved the repo
-pattern; SpaceYouLand carries the canon; Kurearthis supplied the physics truth.
+Rendering, collision, navigation, structural support, mining yield, deposits,
+and AI spatial queries use the same accepted chunk revision. Edited volumetric
+chunks replace—not overlay—the corresponding legacy surface tile.
 
-## Why no bundler/framework?
-ES modules + an import map + vendored `lib/three.module.js`. Zero build step,
-zero npm install, works offline. A bundler earns its place only when the module
-count actually hurts (see fable-survival's Vite setup for the pattern then).
+### 5. Conserved matter and physical custody
 
-## Save format — `src/save/save.js`
-Composed from each system's own serialize()/deserialize(). Versioned (v1).
-localStorage today; a cloud backend is a transport swap, not a redesign
-(fable-survival's Supabase lane is the reference implementation).
+Digging, loading, transfer, dumping, manufacturing, damage, and repair conserve
+material. Excavation removes a measured volume and creates material lots with
+mass, composition, origin, ownership, custody, and location. Loose piles are
+aggregate physical entities; phones do not network one rigid body per grain.
 
-## Multiplayer MVP — `src/multiplayer/multiplayer.js`
-The browser test lane uses the existing Heartbeat Observatory Supabase Realtime
-pattern, not a new websocket stack. Presence is identity/join/leave only; live
-positions are low-rate broadcast packets with idle suppression and a 250ms
-interpolation buffer. The adapter renders remote avatars/ship markers as
-floating-origin tracked world objects, so it never stores authoritative gameplay
-position in mesh coordinates and never touches traversal, physics, inventory, or
-localStorage saves. If the realtime backend is unavailable, the adapter leaves
-the game in normal solo mode.
+A transfer completes only after physical placement, server custody change,
+audit commit, and source/destination reconciliation agree.
+
+### 6. Component-and-connector assemblies
+
+Ships, buildings, stations, vehicles, machines, cargo, and infrastructure are
+graphs of persistent components. Nodes own mass, materials, bounds, collision,
+state, and render variants. Edges represent structural and system connections:
+welds, bolts, hinges, foundations, sockets, power, fuel, coolant, data, and
+atmosphere.
+
+Damage resolves against exact components and material layers. It can perforate,
+deform, jam, sever system paths, breach compartments, break support, and detach
+connected subassemblies. A significant detached part becomes a persistent
+entity with identity, mass, momentum, ownership, contents, provenance, and
+salvage value.
+
+Global flight retains explicit f64 integration. Bounded rigid-body solvers may
+run in rebased local physics islands for cargo, vehicles, debris, and detached
+parts after real-device measurement. No float32 physics world runs at planetary
+coordinates.
+
+### 7. Physical-state materialization
+
+Semantic server state must become observable physical state. The materializer
+projects accepted state into doors, checkpoints, patrols, signs, cargo,
+construction stages, damage, workers, traffic, stock, services, and routes. It
+does not decide gameplay.
+
+Every slice maintains an `observableStateContract` mapping consequential state
+keys to physical projectors and acceptance tests. With the HUD closed, a player
+at the affected location must be able to see, hear, traverse, or physically
+encounter the local consequence.
+
+### 8. Exact spatial graph
+
+Sites begin with measured functions and connection anchors, not scattered
+meshes. Landing pads, buildings, doors, docks, loading bays, utilities, and
+restricted volumes reserve exact parcels. Roads and utilities connect those
+anchors. Surface mesh, grading, drainage, collision, vehicle lanes, pedestrian
+routes, signs, checkpoint sockets, and AI navigation derive from the same graph.
+
+Buildings derive exterior shell, reachable rooms, doors, pressure zones,
+collision, navigation, and support contacts from one blueprint. Every
+usable-looking door leads somewhere; explicitly sealed doors look sealed.
+
+## Simulation fidelity
+
+Canonical continuity does not disappear when no player is watching:
+
+- **Hot:** full local interaction, movement, combat, doors, cargo, and terrain.
+- **Warm:** reduced-cadence nearby routes, stations, production, and conflicts.
+- **Cold:** deterministic analytic progression with retained identity, route,
+  cargo, fuel, damage, and schedule.
+
+Approaching a cold convoy materializes it at the position and state implied by
+its history. It never teleports to an arbitrary spawn portal.
+
+## AI boundary
+
+The AI Director receives a redacted immutable snapshot and returns one bounded,
+schema-valid proposal. It has no database credentials, raw execution surface,
+or direct write authority. Accepted proposals pass the same validator and audit
+path as other commands. Custodian and YOM planning is deterministic and
+capability-bounded.
+
+## V1 migration inventory
+
+Preserve after validation:
+
+- f64 camera-relative rendering
+- body IDs and useful registry structure
+- radial orientation and traversal concepts
+- continuous surface/space movement
+- modular ship-state migration data
+- responsive touch controls
+
+Replace deliberately:
+
+- radial shell terrain and outer-surface clamps
+- random generated settlement placement and roads
+- hand-maintained visual/collider duplication
+- primitive sealed buildings
+- invented faction data
+- localStorage as canonical persistence
+- client-authored multiplayer movement and transport
+- random scalar damage
+- separate desktop world scale/product route
+
+Detailed contracts live in `docs/architecture/`.
