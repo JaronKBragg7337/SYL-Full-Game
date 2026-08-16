@@ -20,6 +20,55 @@ This is how sessions with no shared memory continue each other's work.
 
 ---
 
+## 2026-08-15 — Claude (Opus 5) — Clean V2 substrate: removed the disposable map and its colliders together
+
+**State:** working. The world now renders exactly what it physically is —
+terrain, water, atmosphere, sky, the ship, the civil transports, and the
+salvage pickups. Every generated settlement, road, tree, rock, mast, dish,
+landing-pad disc, and deep-space prop is gone, and so is every collider that
+belonged to them. The gather → repair → launch → land loop still works.
+
+**Shipped:** `src/world/planet.js` lost `buildZoneStructures()` and its
+hand-mirrored `structureCollidersForZone()` footprint table (the two were
+maintained separately — that duplication was the invisible-wall risk).
+`src/world/worldDetails.js` is now a sealed empty seam that documents why the
+settlement/nature/road generator was retired; the on-hold desktop route still
+imports it and gets an empty group. `src/world/spaceProps.js` is unwired from
+`src/main.js`. Pickups kept their entities, IDs, placement, and save behaviour
+but lost the emissive glowing cube in favour of a plain measured 0.8 m marker
+named `pickup:<id>`. Docs: CHANGELOG 0.5.0, ROADMAP Phase 1 boxes,
+CANON_TRACEABILITY spatial row.
+
+**Verified:** `npm test` 155/155 (baseline before editing was 150/150 on merged
+main). New tests prove the substrate rather than the dressing: zero structure
+colliders across all 24 zones; a 33x33 sample sweep of the spawn zone and a
+full sweep of every zone on every body find no invisible walls; the six exact
+footprints the old outpost occupied no longer collide; the ship is not
+deflected where a structure used to be; the retired layer's five entry points
+all return empty; a frozen manifest asserts 9 bodies / 24 zone IDs / 44 pickup
+IDs in order; a whitelist asserts each body group holds only terrain, water,
+and atmosphere. Browser-verified in Chrome at `localhost:8377`: scene inventory
+is 62 top-level nodes with every one accounted for and zero dressing nodes;
+measured horizon lands at 0.402 down the screen exactly as the sphere geometry
+predicts; LANDED → SPACE transition works with fog dying to 0; picking up
+`earth:fortis:0` with F increments inventory and records the stable id; zero
+console messages across 180 stepped frames on a clean load.
+
+**Next up:** ROADMAP Phase 1 remainder — lock coherent body scale and spatial
+addressing before any geology. Earth is currently radius 3000 m with 9.81 m/s²
+at base radius, which is the compressed V1 scale that DECISIONS #6 explicitly
+reopens. Decide that number before Phase 3 digs into it.
+
+**Gotchas:** Chrome throttles `requestAnimationFrame` in an unfocused tab, so
+automated screenshots of this game render a stale floating-origin frame that
+looks like an all-blue void with props hanging in it. That is a measurement
+artifact, not a render bug — step the engine manually from the console
+(replicate the `engine.start()` loop body) before trusting a screenshot. The
+on-hold desktop route inherits the retirement and now shows bare planets. The
+pickup marker is deliberately provisional, not a V2 asset.
+
+---
+
 ## 2026-08-15 — Codex — Canon and repository truth reset for permanent Three.js SYL
 
 **State:** working. The repository now states one product direction: the full

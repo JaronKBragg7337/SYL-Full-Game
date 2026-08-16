@@ -41,9 +41,11 @@ measurements on Jaron's physical phone and the deployed page.
 ## Phase 1 — Clean V2 substrate
 
 - [ ] Create an isolated V2 client entry using the same Three.js product stack.
-- [ ] Remove/disable disposable surface structures, fake roads, nature scatter,
+      (Deferred by owner instruction 2026-08-15: the substrate was applied to
+      the one responsive client and published to the canonical URL instead.)
+- [x] Remove/disable disposable surface structures, fake roads, nature scatter,
       pickup cubes, space dressing, and their colliders together.
-- [ ] Preserve body identities, f64 frames, radial orientation, traversal
+- [x] Preserve body identities, f64 frames, radial orientation, traversal
       evidence, touch controls, and migration IDs.
 - [ ] Lock coherent body scale, mass/gravity, atmosphere, crust, terrain relief,
       travel pacing, and coordinate conventions before geology.

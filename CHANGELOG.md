@@ -3,6 +3,37 @@
 > Historical record only. Older entries preserve what was believed and shipped
 > at the time; they never override [CANON.md](CANON.md).
 
+## 0.5.0 — 2026-08-15 — Clean V2 substrate: the disposable map is gone (Builder: Claude, Opus 5)
+
+- Removed the V1 surface-dressing layer and its colliders **in the same change**,
+  so no deleted mesh can leave an invisible wall behind:
+  - `buildZoneStructures()` in `src/world/planet.js` (landing pads, quonset
+    bunkers, watchtowers, dishes, terminals, tanks, banners, gate rings) and the
+    hand-mirrored `structureCollidersForZone()` footprint table it duplicated.
+  - `src/world/worldDetails.js` entirely: procedural settlements, nature scatter,
+    and the stamped 4-segment "roads" that crossed pads, joined nothing, and no
+    vehicle or AI could use. The module remains as a sealed empty seam that
+    documents why, because the on-hold desktop route still imports it.
+  - Decorative deep-space clutter (`src/world/spaceProps.js`, 40-60 `Math.random()`
+    rocks/debris/satellites with no ID, seed, mass, or persistence) is unwired
+    from the client.
+  - The obsolete emissive glowing pickup cube; pickups now render as a plain,
+    measured 0.8 m marker named with their own stable entity id.
+- Preserved, and now covered by explicit tests: all 9 celestial bodies (including
+  the rustholm and ironcore asteroids), all 24 landing-zone IDs, all 44 pickup
+  IDs, body seeds/positions/gravity/atmospheres/water/terrain identity, f64
+  floating-origin rendering, radial traversal, player and ship mechanics, civil
+  transport, and save round-trip.
+- Landing zones stay physically real without a pad mesh: the analytic flattening
+  still carves each site into the terrain, so the site is geometry, not a prop.
+- Replaced the tests that *required* generated dressing to exist with tests that
+  prove the opposite: zero structure colliders across all 24 zones, a 33x33
+  invisible-wall sweep of the spawn zone plus a full sweep of every zone on every
+  body, retired-layer assertions, a frozen body/zone/pickup ID manifest, and a
+  scene-content whitelist. Tests: 155/155.
+- Net −358 lines. No lighting, terrain math, gravity, flight, damage, save
+  format, or control change.
+
 ## 0.4.1 — 2026-08-15 — Canon and product-direction correction (Builder: Codex)
 
 - Established the owner-supplied v3.0.1 Universe Codex as a locked repository

@@ -40,7 +40,7 @@ canon. Status values are `implemented`, `partial`, `legacy-conflict`, or
 | Permanent Three.js client | partial | `index.html` boots Three.js and active direction is corrected; deployed mirror still needs this revision | One responsive client on public phone and desktop browsers |
 | Material-volume planets | legacy-conflict | Radial one-surface height shell | Quarry proves strata, cave, tunnel, edit persistence, mass conservation |
 | Assembly damage | legacy-conflict | Random module HP and monolithic presentation | Location/material hit, connector failure, persistent detachment |
-| Spatial/asset truth | legacy-conflict | Random scatter, independent roads, primitive generated assets | Measured site graph, interiors, shared nav/collision, provenance manifest |
+| Spatial/asset truth | absent | Random scatter, independent roads, and primitive generated assets were removed with their colliders (0.5.0); nothing spatial has replaced them yet | Measured site graph, interiors, shared nav/collision, provenance manifest |
 
 ## Completion rule
 

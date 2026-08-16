@@ -1,6 +1,6 @@
 {
   "name": "space-you-land",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Space You Land — the permanent Three.js persistent physical-universe game for phone and desktop browsers.",
   "type": "module",
   "scripts": {

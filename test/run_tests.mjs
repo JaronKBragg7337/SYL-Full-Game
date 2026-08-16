@@ -42,7 +42,7 @@ const { BODIES, getBody } = await import('../src/world/bodies.js');
 const { DESKTOP_BODIES, DESKTOP_WORLD_SCALE } = await import('../src/desktop/desktopBodies.js');
 const {
   terrainRadiusAt, altitudeAt, gravityAt, upAt, dominantBody, buildBodyVisual,
-  zoneWorldPos, resolveStructureCollision, structureCollidersForBody,
+  zoneWorldPos, resolveStructureCollision, structureCollidersForBody, buildStarfield,
 } =
   await import('../src/world/planet.js');
 const { PICKUPS } = await import('../src/world/pickups.js');
@@ -60,9 +60,7 @@ const { RECIPES, craft, availableRecipes } = await import('../src/crafting/recip
 const { readyShip, giveInventoryKit } = await import('../src/dev/devTools.js');
 const { joystickAxes, joystickMoveKeys, joystickShipControls, joystickShipAttitude } = await import('../src/ui/touch.js');
 const { Settings } = await import('../src/ui/settings.js');
-const { SpaceProps } = await import('../src/world/spaceProps.js');
 const RenderTextures = await import('../src/render/textures.js');
-const RenderProps = await import('../src/render/props.js');
 const WorldDetails = await import('../src/world/worldDetails.js');
 const { allCollidersForZone } = await import('../src/world/planet.js');
 
@@ -198,29 +196,59 @@ const earth = getBody('earth');
   check('landing zone is flat (collision == visual by construction)', Math.abs(ro - rc) < 0.5,
     `Δ=${Math.abs(ro - rc).toFixed(2)}m`);
 }
+// --- V2 SUBSTRATE: the world is empty of disposable dressing, and nothing it
+// left behind still blocks the player. These replace the old checks that
+// REQUIRED generated buildings, roads, and scatter to exist.
 {
-  const colliders = structureCollidersForBody(earth);
-  check('Earth structures expose analytic colliders', colliders.length >= 6, `got ${colliders.length}`);
+  let totalColliders = 0;
+  for (const b of BODIES) totalColliders += structureCollidersForBody(b).length;
+  check('no zone anywhere exposes a structure collider', totalColliders === 0,
+    `got ${totalColliders}`);
+
+  // The single most important regression this slice can have: a mesh was
+  // deleted but its blocker survived. Sweep the whole spawn zone at walking
+  // height — every sample must pass through untouched.
   const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
-  const insideBunker = offsetWorld(earth, zone, 40, 0, 0.2);
-  const moved = resolveStructureCollision(earth, insideBunker, 0.45);
-  const en = localOffset(earth, zone, insideBunker);
-  const outside = Math.abs(en.east - 40) >= 8.44 || Math.abs(en.north) >= 6.44;
-  check('structure collision pushes player outside bunker footprint', moved && outside,
-    `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
+  let blocked = 0, worst = null;
+  for (let e = -80; e <= 80; e += 5) {
+    for (let n = -80; n <= 80; n += 5) {
+      const p = offsetWorld(earth, zone, e, n, 0.2);
+      if (resolveStructureCollision(earth, p, 0.45)) { blocked++; if (!worst) worst = `${e},${n}`; }
+    }
+  }
+  check('no invisible walls remain in the spawn zone (33x33 sweep)', blocked === 0,
+    `${blocked} blocked samples, first at east,north=${worst}`);
+
+  // Same sweep at the exact footprints the removed outpost used to occupy.
+  const goneFootprints = [[40, 0], [-42, 10], [10, -46], [-15, 44], [30, 30], [33, -14]];
+  let ghosts = 0;
+  for (const [e, n] of goneFootprints) {
+    const p = offsetWorld(earth, zone, e, n, 0.2);
+    if (resolveStructureCollision(earth, p, 0.45)) ghosts++;
+  }
+  check('removed outpost footprints no longer collide', ghosts === 0, `${ghosts} ghost colliders`);
 }
 {
+  // The retired dressing layer must stay retired.
   const landable = BODIES.filter(b => b.landingZones.length > 0);
-  check('landable worlds build surface detail layers',
-    landable.every(b => b._detailStats?.zonesDetailed === b.landingZones.length),
-    landable.map(b => `${b.id}:${b._detailStats?.zonesDetailed || 0}/${b.landingZones.length}`).join(' '));
-  check('landing zones have settlement buildings and roads',
-    landable.every(b => b._detailStats?.settlementBuildings >= b.landingZones.length * 3 &&
-      b._detailStats?.roadSegments >= b.landingZones.length * 2),
-    landable.map(b => `${b.id}:${b._detailStats?.settlementBuildings || 0}b/${b._detailStats?.roadSegments || 0}r`).join(' '));
-  check('exploration dressing exists beyond pads',
-    landable.every(b => b._detailStats?.naturalProps >= b.landingZones.length * 10),
-    landable.map(b => `${b.id}:${b._detailStats?.naturalProps || 0}`).join(' '));
+  check('no body reports settlement buildings, roads, or scatter',
+    landable.every(b => (b._detailStats?.settlementBuildings ?? 0) === 0 &&
+      (b._detailStats?.roadSegments ?? 0) === 0 &&
+      (b._detailStats?.naturalProps ?? 0) === 0),
+    landable.map(b => `${b.id}:${b._detailStats?.settlementBuildings ?? 0}b/${b._detailStats?.roadSegments ?? 0}r/${b._detailStats?.naturalProps ?? 0}n`).join(' '));
+
+  check('every body declares the V2 substrate presentation',
+    BODIES.every(b => b._surfacePresentation === 'none:v2-substrate'));
+
+  // No body group contains a settlement, road, or detail node.
+  let dressingNodes = 0;
+  for (const b of BODIES) {
+    b._group?.traverse((o) => {
+      if (/^(settlement|terrain-detail|zone):/.test(o.name || '')) dressingNodes++;
+    });
+  }
+  check('no body scene graph contains a settlement/zone/detail node', dressingNodes === 0,
+    `${dressingNodes} nodes`);
 }
 {
   const nearEarth = earth._centerV.clone().add(new THREE.Vector3(earth.radius * 1.5, 0, 0));
@@ -754,10 +782,13 @@ console.log('\n== 8. Turning (yaw authority) ==');
     `deltaDot=${thrustDelta.dot(nose).toFixed(2)} vy=${t.velocity.y.toFixed(1)}`);
 }
 {
+  // Mirror of the on-foot sweep: the ship must NOT be shoved by a ghost
+  // collider where the removed outpost used to stand. Terrain still stops it
+  // (proved in section 8b); structures no longer exist to stop it.
   const t = new Ship(stubEngine, BODIES);
   const zone = earth.landingZones.find(z => z.id === 'fortis_outpost');
-  const insideBunker = offsetWorld(earth, zone, 40, 0, 3);
-  t.placeAt(insideBunker, upAt(earth, insideBunker));
+  const overBunker = offsetWorld(earth, zone, 40, 0, 3);
+  t.placeAt(overBunker, upAt(earth, overBunker));
   t.landed = false;
   t.fuel = 100;
   t.stats.ready = true;
@@ -765,8 +796,8 @@ console.log('\n== 8. Turning (yaw authority) ==');
   const ctl = { pitch: 0, yaw: 0, roll: 0, thrustUp: false, brake: false, assist: true, assistForward: 0 };
   t.tick(1 / 60, true, ctl);
   const en = localOffset(earth, zone, t.worldPos);
-  const outside = Math.abs(en.east - 40) >= 12.75 || Math.abs(en.north) >= 10.75;
-  check('ship hull collides with authored structures', outside,
+  const stayed = Math.abs(en.east - 40) < 1 && Math.abs(en.north) < 1;
+  check('ship is not deflected by a removed structure', stayed,
     `east=${en.east.toFixed(2)} north=${en.north.toFixed(2)}`);
 }
 
@@ -884,155 +915,160 @@ console.log('\n== 10. Settings ==');
   check('settings reset restores defaults', s.get('mouseSens') === 1.0 && s.get('graphics') === 'high');
 }
 
-console.log('\n== 11. Space props ==');
+console.log('\n== 11. Retired layers stay retired ==');
 {
-  const sp = new SpaceProps(stubEngine);
-  check('space props spawns between 40 and 60 objects', sp.props.length >= 40 && sp.props.length <= 60, `got ${sp.props.length}`);
-  check('every prop is tracked by the engine', sp.props.every(p => p.trackEntry && p.trackEntry.object3d === p.mesh));
-  check('props have world positions far from origin', sp.props.every(p => p.worldPos.length() >= 500000));
-  sp.tick(0.016);
-  check('space props tick does not throw', true);
+  // spaceProps.js is preserved as migration evidence but must not be wired
+  // into the client. If someone re-imports it, this fails.
+  const mainSrc = readFileSync(join(ROOT, 'src', 'main.js'), 'utf8');
+  check('main.js does not import spaceProps', !/from\s+'\.\/world\/spaceProps\.js'/.test(mainSrc));
+  check('main.js never constructs SpaceProps', !/new\s+SpaceProps/.test(mainSrc));
+  check('SpaceProps module is marked RETIRED',
+    /RETIRED decorative deep-space clutter/.test(readFileSync(join(ROOT, 'src', 'world', 'spaceProps.js'), 'utf8')));
+
+  // The dressing layer's every entry point returns nothing.
+  const zoneE = getBody('earth').landingZones[0];
+  const layer = WorldDetails.buildWorldDetailLayer(getBody('earth'), {}, terrainRadiusAt, {});
+  check('buildWorldDetailLayer returns an empty group', layer.children.length === 0);
+  check('computeSettlementLayout returns nothing',
+    WorldDetails.computeSettlementLayout(getBody('earth'), zoneE, 'mobile').length === 0);
+  check('computeNatureLayout returns nothing',
+    WorldDetails.computeNatureLayout(getBody('earth'), zoneE, 'mobile').length === 0);
+  check('detailCollidersForLayout returns nothing', WorldDetails.detailCollidersForLayout([]).length === 0);
+  check('natureCollidersForLayout returns nothing', WorldDetails.natureCollidersForLayout([]).length === 0);
+
+  // planet.js must not re-grow the removed builders.
+  const planetSrc = readFileSync(join(ROOT, 'src', 'world', 'planet.js'), 'utf8');
+  check('planet.js no longer defines buildZoneStructures', !/function\s+buildZoneStructures/.test(planetSrc));
+  check('planet.js no longer imports the dressing layer',
+    !/from\s+'\.\/worldDetails\.js'/.test(planetSrc));
+  check('planet.js no longer imports prop builders',
+    !/from\s+'\.\.\/render\/props\.js'/.test(planetSrc));
 }
 
-
-console.log('\n== 12. Render layer: textures, props, grounding, detail collision ==');
+console.log('\n== 12. Preserved identity: bodies, zones, pickups, saves ==');
 {
-  // Textures must be Node-safe (no document): every factory returns null here.
+  // Removing presentation must not have cost a single stable ID. These lists
+  // ARE the migration contract — changing one is a deliberate migration, not
+  // a casual edit.
+  const BODY_IDS = ['earth', 'moon', 'rustholm', 'aethelgard', 'cryos', 'pyrrhus', 'veldora', 'ironcore', 'dunewind'];
+  check('all 9 celestial bodies survive, in order',
+    JSON.stringify(BODIES.map((b) => b.id)) === JSON.stringify(BODY_IDS),
+    BODIES.map((b) => b.id).join(','));
+
+  const ZONE_IDS = [
+    'earth/fortis_outpost', 'earth/earth_relay_south', 'earth/fortis_salvage_yard', 'earth/fortis_civil_terminal',
+    'moon/tranquility_pad', 'moon/tranquility_transit_hub',
+    'rustholm/freeport_claim', 'rustholm/freeport_transit_dock',
+    'aethelgard/halcyon_enclave', 'aethelgard/halcyon_civil_quay', 'aethelgard/aethelgard_ruins',
+    'cryos/meridian_ice_station', 'cryos/cryos_crack',
+    'pyrrhus/fortis_bastion', 'pyrrhus/fortis_bastion_terminal', 'pyrrhus/pyrrhus_caldera',
+    'veldora/kindred_mooring', 'veldora/kindred_public_mooring', 'veldora/veldora_ring_mine',
+    'ironcore/registry_foundry', 'ironcore/ironcore_surface',
+    'dunewind/freeport_dune', 'dunewind/freeport_dune_terminal', 'dunewind/dunewind_wreck',
+  ];
+  const zoneIds = BODIES.flatMap((b) => b.landingZones.map((z) => b.id + '/' + z.id));
+  check('all 24 landing-zone IDs survive, in order',
+    JSON.stringify(zoneIds) === JSON.stringify(ZONE_IDS), 'got ' + zoneIds.length);
+
+  check('all 44 pickup IDs survive', PICKUPS.length === 44, 'got ' + PICKUPS.length);
+  check('pickup IDs are unique', new Set(PICKUPS.map((x) => x.id)).size === PICKUPS.length);
+  check('every pickup still resolves a body, zone, and item',
+    PICKUPS.every((x) => {
+      const b = BODIES.find((bb) => bb.id === x.bodyId);
+      return b && b.landingZones.some((z) => z.id === x.zoneId) && resolvesItem(x.itemId);
+    }));
+
+  // Body physical identity: seeds, positions, gravity, atmosphere, water.
+  check('every body keeps its seed, radius, gravity, and position',
+    BODIES.every((b) => Number.isFinite(b.terrain.seed) && Number.isFinite(b.radius) &&
+      Number.isFinite(b.surfaceGravity) && Array.isArray(b.position) && b.position.length === 3));
+  check('atmospheres and water levels survive',
+    BODIES.some((b) => b.atmosphere) && BODIES.some((b) => b.seaLevel !== null && b.seaLevel !== undefined));
+
+  // Landing zones still exist geometrically: the flatten lives in the terrain,
+  // not in the removed pad mesh.
+  const eB = getBody('earth');
+  const zB = eB.landingZones.find((x) => x.id === 'fortis_outpost');
+  const rc = terrainRadiusAt(eB, zB._dirV);
+  const eastV = new THREE.Vector3(0, 1, 0).cross(zB._dirV).normalize();
+  const off = zB._dirV.clone().addScaledVector(eastV, zB.angularRadius * 0.4).normalize();
+  const flatDelta = Math.abs(terrainRadiusAt(eB, off) - rc);
+  check('landing zone is still physically flat without a pad mesh', flatDelta < 0.5,
+    'delta=' + flatDelta.toFixed(2) + 'm');
+}
+
+console.log('\n== 13. Substrate scene validation ==');
+{
+  // What a body is allowed to contain now: terrain, optional water, optional
+  // atmosphere, and the retired (empty) detail group. Nothing else.
+  const ALLOWED = /^(terrain|water|atmo|world-detail):/;
+  const strays = [];
+  for (const b of BODIES) {
+    for (const child of b._group.children) {
+      if (!ALLOWED.test(child.name || '')) strays.push(b.id + ':' + (child.name || '(unnamed)'));
+    }
+  }
+  check('every body group contains only terrain/water/atmosphere', strays.length === 0,
+    strays.slice(0, 6).join(' '));
+
+  check('every body still renders a terrain mesh',
+    BODIES.every((b) => b._group.children.some((c) => c.name === 'terrain:' + b.id)));
+
+  // No collider survives anywhere, on any body, at any zone.
+  let anyCollider = 0;
+  for (const b of BODIES) for (const z of b.landingZones) anyCollider += allCollidersForZone(z).length;
+  check('zero structure colliders across all 24 zones', anyCollider === 0, 'got ' + anyCollider);
+
+  // Full invisible-wall sweep: every zone on every body.
+  const blockedZones = [];
+  for (const b of BODIES) {
+    for (const z of b.landingZones) {
+      let hit = 0;
+      for (let e2 = -60; e2 <= 60; e2 += 10) {
+        for (let n2 = -60; n2 <= 60; n2 += 10) {
+          const pt = offsetWorld(b, z, e2, n2, 0.2);
+          if (resolveStructureCollision(b, pt, 0.45)) hit++;
+        }
+      }
+      if (hit) blockedZones.push(b.id + '/' + z.id + ':' + hit);
+    }
+  }
+  check('no invisible walls in any landing zone on any body', blockedZones.length === 0,
+    blockedZones.slice(0, 5).join(' '));
+}
+
+console.log('\n== 14. Preserved render behaviour (survives the cleanup) ==');
+{
+  // Texture factories must stay headless-safe or this whole harness breaks.
   check('textures are headless-safe (return null without a DOM)',
     RenderTextures.groundDetailTexture() === null &&
     RenderTextures.padTexture(0xff0000) === null &&
     RenderTextures.buildingWallTexture(1, 2) === null);
 
-  // Prop builders produce real geometry.
-  const rngA = (() => { let t = 42; return () => { t = (t * 1103515245 + 12345) & 0x7fffffff; return t / 0x7fffffff; }; })();
-  const rock = RenderProps.makeRock(rngA, 0x888888);
-  check('makeRock returns a mesh with vertices', rock.isMesh && rock.geometry.attributes.position.count > 20);
-  const tree = RenderProps.makeTree(rngA, 0x4b3621, 0x6fa35f);
-  check('makeTree returns trunk + canopy group', tree.isObject3D && tree.children.length >= 2);
-  const hut = RenderProps.makeQuonsetHut(rngA, 12, 10, 0x4a5c66, 0xff0000, 0.6);
-  check('makeQuonsetHut has foundation + shell + caps + door', hut.children.length >= 5);
-  const gab = RenderProps.makeGabledBuilding(rngA, 10, 6, 8, 0x4a5c66, 0xff0000, 0.6);
-  check('makeGabledBuilding has foundation + walls + roof + door', gab.children.length >= 4);
-
-  // displace is deterministic for the same seed.
-  const g1 = RenderProps.displace(new THREE.IcosahedronGeometry(2, 1), 0.5, 7);
-  const g2 = RenderProps.displace(new THREE.IcosahedronGeometry(2, 1), 0.5, 7);
-  let same = true;
-  for (let i = 0; i < g1.attributes.position.array.length; i++) {
-    if (Math.abs(g1.attributes.position.array[i] - g2.attributes.position.array[i]) > 1e-9) { same = false; break; }
-  }
-  check('displace is deterministic per seed', same);
-
-  // Grounding: footprint sampling brackets the truth and normals are sane.
-  const earth = getBody('earth');
-  const zone = earth.landingZones[0];
-  const fp = RenderProps.sampleFootprint(earth, zone._dirV, 6, 6, terrainRadiusAt);
-  check('sampleFootprint: minR <= avgR <= maxR', fp.minR <= fp.avgR + 1e-9 && fp.avgR <= fp.maxR + 1e-9);
-  check('sampleFootprint: flat pad normal is near-radial', fp.normal.dot(zone._dirV) > 0.99);
-
-  // Settlement layout is deterministic and produces buildings + colliders.
-  const layoutA = WorldDetails.computeSettlementLayout(earth, zone, 'mobile');
-  const layoutB = WorldDetails.computeSettlementLayout(earth, zone, 'mobile');
-  check('settlement layout is deterministic', JSON.stringify(layoutA) === JSON.stringify(layoutB));
-  const colliders = WorldDetails.detailCollidersForLayout(layoutA);
-  check('settlement layout emits building colliders', colliders.length >= 3 && colliders.every(c => c.kind === 'box' || c.kind === 'circle'));
-
-  // Detail colliders integrate with planet collision: standing inside a
-  // detail building must push the player out (no more walking through).
-  zone._extraColliders = colliders;
-  const bld = layoutA.find(sp => sp.type === 'gabled' || sp.type === 'quonset' || sp.type === 'tower');
-  check('layout contains at least one building', !!bld);
-  if (bld) {
-    const pos = offsetWorld(earth, zone, bld.east, bld.north, 1.0);
-    const moved = resolveStructureCollision(earth, pos, 0.45);
-    const after = localOffset(earth, zone, pos);
-    const clearedE = Math.abs(after.east - bld.east) >= bld.w / 2 - 0.2;
-    const clearedN = Math.abs(after.north - bld.north) >= bld.d / 2 - 0.2;
-    check('player inside a settlement building is pushed out', moved && (clearedE || clearedN),
-      `east ${after.east.toFixed(1)} vs bld ${bld.east.toFixed(1)}`);
-  }
-  check('allCollidersForZone merges zone + detail colliders',
-    allCollidersForZone(zone).length > colliders.length - 1);
-  zone._extraColliders = undefined;
-
-  // Lighting: init + update against a stub engine, on-surface vs in space.
+  // Lighting/atmosphere is explicitly preserved: sun, sky bounce, and the
+  // altitude-reactive fog that sells surface -> space traversal.
   const { initLighting, updateLighting } = await import('../src/render/lighting.js');
   const fakeRenderer = { outputColorSpace: null, toneMapping: null, toneMappingExposure: 0, shadowMap: {} };
   const lscene = new THREE.Scene();
   const lengine = { scene: lscene, renderer: fakeRenderer, cameraWorldPos: new THREE.Vector3() };
   const L = initLighting(lengine, new Settings());
   check('lighting creates sun + hemi + fog', !!L.sun && !!L.hemi && !!lscene.fog);
-  // On Earth's surface: fog should be on; far in space: off.
-  lengine.cameraWorldPos.copy(zoneWorldPosOf(earth, zone, 2));
+
+  const earthL = getBody('earth');
+  const zoneL = earthL.landingZones[0];
+  const rL = terrainRadiusAt(earthL, zoneL._dirV) + 2;
+  lengine.cameraWorldPos.copy(zoneL._dirV.clone().multiplyScalar(rL).add(earthL._centerV));
   updateLighting(L, lengine, BODIES);
   const fogOnGround = lscene.fog.density;
   lengine.cameraWorldPos.set(9e7, 9e7, 9e7);
   updateLighting(L, lengine, BODIES);
-  check('fog exists at the surface and dies in space', fogOnGround > 1e-5 && lscene.fog.density === 0,
-    `ground ${fogOnGround}, space ${lscene.fog.density}`);
-}
+  check('fog exists at the surface and dies in space',
+    fogOnGround > 1e-5 && lscene.fog.density === 0,
+    'ground ' + fogOnGround + ', space ' + lscene.fog.density);
 
-function zoneWorldPosOf(body, zone, extraHeight = 0) {
-  const r = terrainRadiusAt(body, zone._dirV) + extraHeight;
-  return zone._dirV.clone().multiplyScalar(r).add(body._centerV);
-}
-
-
-console.log('\n== 13. Scene validation (visual-direction brief) ==');
-{
-  // Every body: settlement buildings must not overlap each other or the pad,
-  // roads must not exceed a sane slope, and every collider must trace back to
-  // a layout entry. These are the "world looks planned, not scattered" checks.
-  let overlaps = 0, padClashes = 0, steepRoads = 0, colliderMismatches = 0;
-  for (const body of BODIES) {
-    if (!body.landingZones?.length || body.terrain?.profile === 'gas') continue;
-    for (const zone of body.landingZones) {
-      const layout = WorldDetails.computeSettlementLayout(body, zone, 'mobile');
-      const buildings = layout.filter(sp => ['gabled', 'quonset', 'tower'].includes(sp.type));
-      // Pairwise AABB overlap (east/north plane).
-      for (let i = 0; i < buildings.length; i++) {
-        for (let j = i + 1; j < buildings.length; j++) {
-          const a = buildings[i], b = buildings[j];
-          if (Math.abs(a.east - b.east) < (a.w + b.w) / 2 + 0.5 &&
-              Math.abs(a.north - b.north) < (a.d + b.d) / 2 + 0.5) overlaps++;
-        }
-        // Pad clearance: pad radius 27.5 + half diagonal.
-        const bd = buildings[i];
-        if (Math.hypot(bd.east, bd.north) < 28 + Math.hypot(bd.w, bd.d) / 2) padClashes++;
-      }
-      // Collider count matches layout-derived count.
-      const expected = WorldDetails.detailCollidersForLayout(layout).length +
-        WorldDetails.natureCollidersForLayout(WorldDetails.computeNatureLayout(body, zone, 'mobile')).length;
-      zone._extraColliders = undefined;
-      const baseCount = allCollidersForZone(zone).length;
-      zone._extraColliders = WorldDetails.detailCollidersForLayout(layout)
-        .concat(WorldDetails.natureCollidersForLayout(WorldDetails.computeNatureLayout(body, zone, 'mobile')));
-      if (allCollidersForZone(zone).length !== baseCount + expected) colliderMismatches++;
-      zone._extraColliders = undefined;
-    }
-  }
-  check('no settlement buildings overlap each other', overlaps === 0, `${overlaps} overlapping pairs`);
-  check('no settlement buildings intrude on landing pads', padClashes === 0, `${padClashes} clashes`);
-  check('every detail collider traces to a layout entry', colliderMismatches === 0, `${colliderMismatches} zones mismatched`);
-
-  // Road slope check on Earth spawn zone: each segment end-to-end grade < 40%.
-  const earthV = getBody('earth');
-  const zoneV = earthV.landingZones[0];
-  const frame = zoneFrame(zoneV._dirV);
-  let maxGrade = 0;
-  for (const rs of [{ len: 76, yaw: 0 }, { len: 62, yaw: Math.PI / 2 }]) {
-    for (const t of [-0.5, 0.5]) {
-      const along = rs.len * t;
-      const dir = zoneV._dirV.clone()
-        .addScaledVector(frame.east, (Math.sin(rs.yaw) * along) / earthV.radius)
-        .addScaledVector(frame.north, (Math.cos(rs.yaw) * along) / earthV.radius)
-        .normalize();
-      const r0 = terrainRadiusAt(earthV, zoneV._dirV);
-      const r1 = terrainRadiusAt(earthV, dir);
-      maxGrade = Math.max(maxGrade, Math.abs(r1 - r0) / (rs.len / 2));
-    }
-  }
-  check('spawn-zone roads sit on sane grades (<40%)', maxGrade < 0.4, `max grade ${(maxGrade * 100).toFixed(0)}%`);
+  // The starfield is the sky, not clutter — it stays.
+  const stars = buildStarfield(500, 400000);
+  check('starfield still builds', stars.isPoints && stars.geometry.attributes.position.count === 500);
 }
 
 console.log(`\n========================================`);
