@@ -1,68 +1,92 @@
-# AGENTS.md — For Any AI Agent (Claude, Codex, Opus, Gemini, future models)
+# AGENTS.md — Instructions for Every AI Agent
 
-This repository is AI-built and AI-maintained, owned by Jaron (does not code —
-describe results to him in plain language, ask him for feel tests only).
+This repository is AI-built and AI-maintained under the direction and ownership
+of Jaron K. Bragg. Explain outcomes in plain language. Automate structural
+verification and ask Jaron for real-device feel tests when human judgment is
+actually required.
 
-Read in this order before doing anything:
+## Read before changing anything
 
-1. **CLAUDE.md** — operating rules and session protocol (generic agent manual;
-   named for Claude Code auto-load, applies to every model)
-2. **HANDOFF.md** — session log; the TOP entry is the current state
-3. **VISION.md** — what SYL is; the design laws you may not break
-4. **ARCHITECTURE.md** — why things are built this way (evidence-backed;
-   don't "improve" these away)
-5. **DECISIONS.md** — what is real vs approximated, and what each approximation's
-   replacement path is
-6. **ROADMAP.md** — the backlog; take the top unchecked item of the current milestone
+1. `CANON.md` — precedence and scope boundaries.
+2. `docs/canon/SYL_CANON_AMENDMENTS.md` — accepted decisions after v3.0.1.
+3. `docs/canon/SYL_UNIVERSE_CODEX_v3.0.1.md` — locked universe Bible.
+4. `CLAUDE.md` — operating rules; despite the filename, it applies to all agents.
+5. The newest entry in `HANDOFF.md` — current repository state.
+6. `VISION.md`, `ARCHITECTURE.md`, and `DECISIONS.md` — derived product and
+   technical contracts.
+7. `ROADMAP.md` — current implementation order.
 
-## Non-negotiables, whoever you are
+Old code, tests, comments, handoffs, and changelog entries never override canon.
 
-- The game must run at all times. `node server.js` + browser, and `npm test`
-  green, before AND after your session.
-- **The game is live at heartbeatobservatory.com/games/syl — keep it live.**
-  Every finished chunk deploys there (PORTABILITY.md § Deploy). Jaron does not
-  want local-only builds: other people play this, and he tests on his phone.
-- **Mobile stays playable.** Touch controls (src/ui/touch.js) must keep
-  working; check them when you change input or UI.
-- **The destination is the official Unreal/Unity game** (VISION.md § The
-  official game). This repo is the blueprint/playtest, not the endgame —
-  prefer choices that transfer to Unreal.
-- **Never** introduce a flat-world assumption, a loading screen, a teleport
-  masquerading as travel, or a second terrain-height source.
-- **Never** store gameplay positions in mesh positions (floating-origin rule).
-- If a gameplay object rotates, its visual must receive the same authoritative
-  quaternion through `trackWorldObject({ ..., quaternion })`. Do not trust a
-  physics-quaternion test alone; verify the rendered group quaternion too.
-- **Never** add a physics engine without reading DECISIONS.md #3 first.
-- The ship stays modular. New ship features extend shipParts/shipBuilder;
-  they do not bypass them.
-- Registries stay data-driven: new planet = bodies.js entry; new faction =
-  factions.js entry; new part = shipParts.js + items.js entries.
-- Old saves must keep loading. Bump SAVE_VERSION and migrate in save.js.
-- Finish ONE roadmap item fully (implement → `npm test` green → browser-verify →
-  document) rather than starting several.
-- Before ending: update HANDOFF.md (top entry, use its template) + CHANGELOG.md,
-  then commit. Push if credentials exist.
+## Product truth
+
+- Space You Land is permanently a Three.js browser game. It is not an Unreal
+  Engine or Unity prototype and has no engine-port destination.
+- The complete public game lives at
+  `https://www.heartbeatobservatory.com/games/syl/`.
+- There is one responsive game. Phone/touch is a primary full-fidelity play
+  path; desktop browsers run the same client. The old `desktop.html` route is a
+  preserved, on-hold experiment, not a product lane.
+- Never reduce fidelity based on an assumed phone limitation. Measure the
+  deployed game on Jaron's physical phone, identify the actual bottleneck, and
+  optimize that bottleneck without removing state-bearing physical detail.
+- Fable Survival is a separate game. Its route, product identity, saves, and
+  architecture are not SYL canon.
+
+## Non-negotiable system laws
+
+- The server decides canonical economy, ownership, custody, territory,
+  enforcement, damage, construction, and persistent world state. Clients submit
+  intentions and render accepted outcomes.
+- AI Director output is proposal-only. Custodian and YOM behavior is
+  deterministic, capability-bounded server simulation, not LLM authority.
+- If a system matters, its local consequence must be physically observable.
+- Gameplay positions use f64 hierarchical frames. Three.js meshes are local
+  projections of state, never the persistence layer.
+- A planet is a materially conserved volume. Rendering, collision, navigation,
+  support, excavation, caves, and deposits derive from one terrain revision.
+- Gameplay-relevant assets are component assemblies with stable IDs and named
+  structural/system connections. Damage is location/material/energy aware;
+  failed connections may create persistent detached entities.
+- Roads, building parcels, doors, docks, utilities, vehicle lanes, and AI
+  routes derive from one measured spatial plan. AI never guesses geometry from
+  pixels.
+- Ships and stations are walkable physical places. Cargo and convoys are
+  physical, conserved entities, not menu substitutions.
+- External texture inputs must be CC0 with recorded source, license, and
+  checksum. Runtime assets require real dimensions, component material zones,
+  collision, connectors, and measured LODs.
+- No fake travel teleport or loading screen may replace physical traversal.
+- Stable V1 IDs and saves require an explicit migration when replaced. Legacy
+  local saves are not server authority.
+
+## Physics and performance
+
+- Preserve the proven f64 floating-origin and camera-relative rendering pattern.
+- Do not run a float32 physics world at planetary coordinates. Bounded
+  rigid-body simulation is allowed inside rebased local frames when a measured
+  feature such as detachment requires it.
+- Do not allocate a dense voxel planet. Use deterministic procedural geology
+  plus sparse persistent edits.
+- Rendering, collision, and navigation must never consume different accepted
+  revisions of a changed object or terrain chunk.
+- Phone performance is established by measurements on the public build and
+  Jaron's actual device, not a pre-selected fidelity ceiling.
 
 ## Session protocol
 
-1. `git status` — if dirty, read HANDOFF top entry; a crashed session may have
-   left unlogged work (treat as contamination: verify before trusting).
-2. `npm test` — must be green before you change anything.
-3. Do your one chunk. Add/adjust tests in `test/run_tests.mjs` for what you build.
-4. Verify: `npm test` + run the game and play the affected path.
-5. Document: HANDOFF entry + CHANGELOG line + any doc your change invalidates.
-   Always re-check README.md before ending; update it if controls, run URLs,
-   current gameplay loop, verification count, or system/file locations changed.
-6. Commit with a clear message; attribute yourself (`Builder: Claude|Codex|...`).
-7. Push if credentials exist. If gameplay changed, deploy the static copy to
-   heartbeatobservatory.com/games/syl using PORTABILITY.md.
+1. Run `git status -sb`. Preserve unrelated user changes.
+2. Run `npm test` before editing and record the baseline.
+3. Complete one coherent roadmap slice with tests.
+4. Run `npm test` again and browser-verify the affected public flow.
+5. Update the top of `HANDOFF.md`, add a forward entry to `CHANGELOG.md`, and
+   correct any active document invalidated by the work.
+6. Commit with a plain-language message and the required Codex attribution
+   trailer when Codex participates.
+7. Push the source-repository change. For gameplay changes, sync the verified
+   client into `heartbeat-observatory/games/syl/`, push that repository, and
+   verify the exact public URL without authentication.
 
-## Model routing note (from Jaron)
-
-Heavy coding tasks may fall to Opus, Codex, Claude, or future models.
-This repo is deliberately structured so that works: the physics that is hard to
-re-derive (floating origin, analytic collision, radial-gravity movement,
-traversal derivation) is ALREADY BUILT and explained in ARCHITECTURE.md +
-header comments. When extending those systems, copy their patterns; do not
-re-derive from scratch.
+Do not advertise `/games/syl-test/` as isolated staging. Its current legacy
+client shares the production origin and default save key. Use a genuinely
+isolated preview only after it is implemented and verified.

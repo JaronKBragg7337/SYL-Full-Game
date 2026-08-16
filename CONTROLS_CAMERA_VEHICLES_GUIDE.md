@@ -6,8 +6,8 @@ This guide is for Jaron or any agent who needs to change ship controls without
 guessing through chat history. It explains where the keyboard/touch input,
 camera, and ship physics are wired.
 
-Important current repo note: this guide is rebased on top of Claude/Fable's
-2026-07-04 root-cause repair (`e056ff7` on `origin/main`), which removed the
+Important current repo note: this guide is rebased on top of the 2026-07-04
+root-cause repair (`e056ff7` on `origin/main`), which removed the
 assisted-flight early return, restored a chase camera that follows the ship,
 made terrain collision mesh-true, and added a solid ship hull.
 
@@ -97,7 +97,7 @@ The implementation intentionally scales and filters that raw shape:
 
 Keep those constants in `src/ui/touch.js` for mobile feel tuning. Do not lower
 global ship torque just to make the phone stick slower, because that also
-changes PC controls and non-touch flight.
+changes keyboard/mouse controls and non-touch flight in the same browser client.
 
 ### Keyboard-To-Ship Routing
 

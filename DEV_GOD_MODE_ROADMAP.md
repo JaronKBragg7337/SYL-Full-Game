@@ -1,6 +1,8 @@
 # SYL Dev/God Mode, Prefabs, Snap Builder, and Walk-In Vehicles
 
-Status as of 2026-07-04.
+Status corrected 2026-08-15. `CANON.md` and the V2 physical-world contract
+govern this tooling. V1 primitive placement remains historical capability, not
+the production asset direction.
 
 This file tracks the editor/building/vehicle wishlist so it is not trapped in
 chat history. It should be updated whenever an agent ships part of this lane.
@@ -19,7 +21,7 @@ Current implementation lives in `src/dev/devTools.js`.
 
 - `[x]` Admin-only or local-only toggle.
   - Implemented as opt-in `?dev=1`, persisted per browser in localStorage.
-  - Desktop shortcuts: `F10` enables/toggles, backquote toggles once enabled.
+  - Keyboard shortcuts: `F10` enables/toggles, backquote toggles once enabled.
   - This is not real account-based admin auth yet.
 - `[x]` Fly as the player camera.
   - DEV panel has `Fly person`.
@@ -43,9 +45,11 @@ Current implementation lives in `src/dev/devTools.js`.
   - There is no placed-object persistence yet.
 
 Next useful slice:
-1. Add a DEV zone/body teleport list.
-2. Add spawnable code-built crates/props with IDs.
-3. Extend save format with a `placedObjects` array.
+1. Add inspection by stable entity ID and hierarchical spatial address.
+2. Add scene reports, snapshots/diffs, collision/navigation/support overlays,
+   and authoritative revision display.
+3. Add dev-only body/site travel after the V2 coordinate/authority contract
+   exists. Debug teleport remains diagnostic and never becomes gameplay travel.
 
 ## 2. Placeable Prefabs
 
@@ -66,10 +70,12 @@ then later promote into player construction.
   - Use `?dev=1` then DEV -> `Ready ship here` or `Ready current ship`.
 
 Next useful slice:
-1. Create `src/editor/prefabs.js` with code-built prefab definitions.
-2. Start with mobile-safe primitives: crate, wall, floor, ramp, door frame, small building, landing pad.
-3. Add DEV placement cursor and rotate/place/delete controls.
-4. Save placed prefab instances.
+1. Define the V2 assembly/template schema before enabling placement.
+2. Register measured components, bounds, supports, apertures, sockets,
+   materials, collision, navigation, provenance, and stable IDs.
+3. Add a diagnostic placement cursor that rejects invalid support, clearance,
+   intersection, and authority conditions.
+4. Save accepted server-side entities, not client-only decorative instances.
 
 ## 3. Snap Builder
 
@@ -123,25 +129,42 @@ Next useful slice:
 3. Add a local ship interior frame so player position can ride with the moving ship.
 4. Change boarding from abstract mode switch to: approach -> open -> walk in -> sit -> pilot.
 
-## 5. Asset Pipeline
+## 5. Three.js Production Asset Pipeline
 
-Goal: stay mobile-safe while leaving a path to richer authored assets.
+Goal: ship mechanically and architecturally assembled production assets whose
+geometry, materials, movement, collision, navigation, damage, and provenance
+describe the same object.
 
-- `[x]` Code-built placeholder prefabs first.
-  - Current world structures, pickups, ship parts, and Fortis visual are code-built Three.js primitives.
-  - This keeps the live mobile page light.
-- `[~]` Blender-generated GLB assets.
-  - The Unreal/Blender source exists in the sibling `SpaceYouLand` lane, especially
-    `_authoring/make_walkable_gunship.py`.
-  - The web build intentionally has not shipped heavy GLB/FBX assets yet.
-- `[ ]` Unreal/Unity-style assets later if useful.
-  - Official-engine work is tracked in `ROADMAP.md` Milestone 7.
-  - Any imported asset must pass mobile performance checks before public sync.
+- `[x]` V1 primitives and generated GLBs are identified as legacy placeholders.
+  - Current world structures, pickup cubes, ship pieces, and the three desktop
+    GLBs are not approved V2 production assets.
+- `[ ]` Authoritative asset manifest and inspection schema.
+  - Stable template/component/material IDs; measured bounds and mass; supports;
+    apertures; sockets; collision; navigation; pressure zones; damage proxies;
+    LODs; animation drivers; provenance.
+- `[ ]` Detailed Three.js asset authoring/import path.
+  - Blender and other tools may produce GLB, but Three.js is the product engine.
+  - Assets require silhouette readability, secondary/tertiary construction
+    detail, real proportions, seams, guards, fasteners, motors, wiring, and
+    component-specific PBR material zones.
+- `[ ]` CC0 material intake and proof.
+  - Record exact source URL, license evidence, checksum, modifications,
+    real-world repeat scale, map set, color space, and anti-tiling treatment.
+- `[ ]` State-driven articulated motion.
+  - Pivots, constraints, collision, navigation, sound, light, and visuals use
+    the same accepted component state.
+- `[ ]` Measured cross-device delivery.
+  - Build full intended fidelity, test the deployed page on Jaron's physical
+    phone, and optimize only demonstrated bottlenecks. Phone is not a reduced
+    asset tier.
 
 Next useful slice:
-1. Keep editor prefabs code-built until placement/saving/snapping works.
-2. Only then replace selected prefabs with optimized GLB.
-3. Add asset budget rules: triangle count, texture size, draw calls, and phone smoke test.
+1. Implement the manifest/inspection contract from `docs/assets/` and
+   `docs/architecture/PHYSICAL_WORLD_CONTRACT.md`.
+2. Produce one approved multi-component asset with real material provenance,
+   reachable function, damage state, and LODs.
+3. Validate exact dimensions, connectors, collision, navigation, animation,
+   public loading, and real-phone performance before growing the catalog.
 
 ## Summary: What Is Done vs Not Done
 
@@ -159,7 +182,7 @@ Partial foundations:
 - Current fixed-slot modular ship builder.
 - Current abstract `E` board/exit flow.
 - Fortis ramp/door/seat visual pieces.
-- Authored world structures as code-built primitives.
+- Legacy world structures as code-built primitives.
 - Normal save system, but not placed-object persistence.
 
 Not done yet:
@@ -173,4 +196,4 @@ Not done yet:
 - Physical hatch/ramp interaction.
 - Walkable ship interiors.
 - Pilot/crew seat stations with different roles.
-- Blender GLB shipping pipeline for mobile.
+- Three.js production asset pipeline with provenance and measured LODs.

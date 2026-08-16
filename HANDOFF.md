@@ -1,5 +1,9 @@
 # HANDOFF.md — Session Log
 
+> Historical record only. Entries preserve what was believed and shipped at
+> the time; they never override [CANON.md](CANON.md). Corrections are added as
+> newer entries rather than rewriting old work.
+
 Newest entry goes at the TOP. Every agent session adds an entry before ending.
 This is how sessions with no shared memory continue each other's work.
 
@@ -13,6 +17,42 @@ This is how sessions with no shared memory continue each other's work.
 **Next up:** the single most useful next step
 **Gotchas:** anything surprising the next session must know
 ```
+
+---
+
+## 2026-08-15 — Codex — Canon and repository truth reset for permanent Three.js SYL
+
+**State:** working. The repository now states one product direction: the full
+Three.js game at `https://www.heartbeatobservatory.com/games/syl/`. The current
+V1 client still runs, but its surface-only planets, client-local persistence,
+peer-broadcast presence, placeholder map/factions, and procedural assets are
+explicit migration debt rather than finished architecture.
+
+**Shipped:** added the locked v3.0.1 Universe Codex, append-only owner
+amendments, original-concept archive, canon precedence/index and SHA-256 guard,
+traceability matrix, server-authority contract, physical-world contract, asset
+provenance policy/manifest, and MIT license. Rewrote active project guidance
+around permanent Three.js, one responsive phone/desktop-browser client,
+volumetric material planets, conserved excavation, measured spatial graphs,
+component assemblies, and physical damage. Labeled the separate desktop route
+as an on-hold legacy experiment. Removed three obsolete self-mutating GitHub
+workflows and replaced them with ordinary read-only CI. No gameplay system,
+map, save, or deployed website bundle changed.
+
+**Verified:** clean baseline was 143/143. Final `npm test` is 150/150, including
+the locked-Bible checksum, canonical product metadata, public-document title,
+and provenance checks for every recorded local GLB. JSON parsing, source syntax,
+link/path, diff-whitespace, public URL, and mirror parity checks are recorded in
+the publishing handoff/PR.
+
+**Next up:** build the authority-first V2 Recovery Corridor substrate: remove
+legacy map presentation and colliders together, then implement a versioned
+volumetric material chunk on Fortis before roads or production buildings.
+
+**Gotchas:** `/games/syl-test/` currently shares the `syl_save` localStorage key
+with production and is not an isolated staging route. `desktop.html` is
+preserved for migration evidence, not promoted as a PC edition. Fable Survival
+is unrelated and must remain untouched.
 
 ---
 
